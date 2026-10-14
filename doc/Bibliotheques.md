@@ -29,19 +29,20 @@ n'est pas reconnu dans le terminal VS Code, ajouter ce dossier au PATH du
 terminal (ou lancer VS Code depuis un terminal où CMake est accessible) :
 `C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin`.
 
-Exemple de `CMakeUserPresets.json` pour un poste Visual Studio 2022, en
-conservant les noms utilisés par les tâches VS Code :
+Exemple de `CMakeUserPresets.json` pour un poste Visual Studio 2022 :
 
 ```json
 {
   "version": 5,
   "configurePresets": [
-    { "name": "windows", "generator": "Visual Studio 17 2022", "architecture": "x64", "binaryDir": "${sourceDir}/out/windows" }
+    { "name": "windows2022", "inherits": "windows", "generator": "Visual Studio 17 2022", "binaryDir": "${sourceDir}/out/windows2022" }
   ]
 }
 ```
 
-Utiliser cet exemple avant la première configuration sur ce poste.
+Configurer avec `cmake --preset windows2022`, puis compiler avec
+`cmake --build out/windows2022 --config Debug`. Sur ce poste, adapter les
+tâches et le chemin de débogage VS Code au preset/dossier `windows2022`.
 
 ```powershell
 cmake --preset windows
