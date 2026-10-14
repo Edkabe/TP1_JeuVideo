@@ -4,7 +4,9 @@
 			"name": "Win32",
 			"includePath": [
 				"${workspaceFolder}/src/**",
-				"${workspaceFolder}/build/include"
+				"${workspaceFolder}/build/include",
+				"${workspaceFolder}/include",
+				"${workspaceFolder}/external/glm"
 			],
 			"defines": [
 				"_DEBUG",

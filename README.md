@@ -9,3 +9,9 @@ Les tâches sont suivies dans les issues et les jalons Sprint 1, Sprint 2 et Spr
 ## Référence de cours
 
 Atelier2JV.zip est un atelier distinct du projet. Son archive originale est destinée à la section Releases afin de pouvoir être téléchargée par l’équipe.
+
+## Compilation et bibliothèques
+
+Voir [le guide de compilation incrémentale](doc/Bibliotheques.md).
+Le moteur se compile dans une bibliothèque statique indépendante du `main`.
+Les dépendances déjà fournies sont réutilisées, sans vcpkg.
