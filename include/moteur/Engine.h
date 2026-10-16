@@ -3,6 +3,8 @@
 #include <functional>
 
 namespace moteur {
+class Scene;
+
 class Engine {
 public:
     static Engine& getInstance();
@@ -13,6 +15,10 @@ public:
     bool run(const std::function<void(float)>& update,
              const std::function<void()>& render,
              const std::function<void(const SDL_Event&)>& onEvent = {});
+    // Cette surcharge distribue automatiquement les événements à une scène.
+    bool run(Scene& scene,
+             const std::function<void(float)>& update,
+             const std::function<void()>& render);
     void stop() { running = false; }
     bool shutdown();
     bool isRunning() const { return running; }
