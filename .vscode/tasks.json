@@ -1,70 +1,45 @@
 {
   "tasks": [
     {
-      "problemMatcher": [],
-      "osx": {
-        "args": [
-          "--preset",
-          "macos"
-        ]
-      },
+      "problemMatcher": [
+        "$msCompile"
+      ],
+      "label": "(Windows) Compiler",
       "type": "process",
       "options": {
         "cwd": "${workspaceFolder}"
       },
-      "args": [
-        "--preset",
-        "windows"
-      ],
-      "label": "Configurer CMake",
-      "command": "cmake"
-    },
-    {
-      "dependsOn": "Configurer CMake",
       "group": {
-        "kind": "build",
-        "isDefault": true
+        "isDefault": true,
+        "kind": "build"
       },
+      "command": "powershell.exe",
       "args": [
-        "--build",
-        "--preset",
-        "windows-debug"
-      ],
-      "command": "cmake",
-      "problemMatcher": "$msCompile",
-      "dependsOrder": "sequence",
-      "type": "process",
-      "osx": {
-        "args": [
-          "--build",
-          "--preset",
-          "macos-debug"
-        ]
-      },
-      "options": {
-        "cwd": "${workspaceFolder}"
-      },
-      "label": "Compiler (incremental)"
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/scripts/compiler-windows.ps1"
+      ]
     },
     {
+      "problemMatcher": [
+        "$msCompile"
+      ],
+      "label": "(Windows) Vérifier",
+      "type": "process",
       "options": {
         "cwd": "${workspaceFolder}"
       },
-      "osx": {
-        "args": [
-          "--preset",
-          "macos-debug"
-        ]
-      },
-      "type": "process",
+      "command": "powershell.exe",
       "args": [
-        "--preset",
-        "windows-debug"
-      ],
-      "label": "Verifier les bibliotheques",
-      "command": "ctest",
-      "dependsOn": "Compiler (incremental)",
-      "problemMatcher": []
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/scripts/compiler-windows.ps1",
+        "-Verifier"
+      ]
     }
   ],
   "version": "2.0.0"

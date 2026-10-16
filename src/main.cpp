@@ -17,7 +17,9 @@ bool demonstrate(moteur::Engine& engine, bool smoke) {
   moteur::Shader fragment(GL_FRAGMENT_SHADER);
   moteur::Program program;
   moteur::VAO vao;
-  const std::filesystem::path shaders(MOTEUR_SHADER_DIR);
+  const char* basePath = SDL_GetBasePath();
+  if (!basePath) { std::cerr << SDL_GetError() << '\n'; return false; }
+  const std::filesystem::path shaders = std::filesystem::path(basePath) / "assets" / "shaders";
   if (!vertex.loadShader((shaders / "triangle.vert").string()) ||
       !fragment.loadShader((shaders / "triangle.frag").string())) {
     std::cerr << vertex.getError() << fragment.getError() << '\n'; return false;

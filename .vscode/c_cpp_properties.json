@@ -1,26 +1,24 @@
 {
-	"configurations": [
-		{
-			"name": "Win32",
-			"configurationProvider": "ms-vscode.cmake-tools",
-			"includePath": [
-				"${workspaceFolder}/src/**",
-				"${workspaceFolder}/build/include",
-				"${workspaceFolder}/include",
-				"${workspaceFolder}/external/glm"
-			],
-			"defines": [
-				"_DEBUG",
-				"UNICODE",
-				"_UNICODE",
-				"MOTEUR_SHADER_DIR=\"${workspaceFolder}/assets/shaders\""
-			],
-			"windowsSdkVersion": "10.0.26100.0",
-			"compilerPath": "cl.exe",
-			"cStandard": "c17",
-			"cppStandard": "c++17",
-			"intelliSenseMode": "windows-msvc-x64"
-		}
+  "configurations": [
+    {
+      "name": "Win32",
+      "includePath": [
+        "${workspaceFolder}/src/**",
+        "${workspaceFolder}/build/include",
+        "${workspaceFolder}/include",
+        "${workspaceFolder}/external/glm"
+      ],
+      "defines": [
+        "_DEBUG",
+        "UNICODE",
+        "_UNICODE"
+      ],
+      "windowsSdkVersion": "10.0.26100.0",
+      "compilerPath": "cl.exe",
+      "cStandard": "c17",
+      "cppStandard": "c++17",
+      "intelliSenseMode": "windows-msvc-x64"
+    }
   ],
   "version": 4
 }
