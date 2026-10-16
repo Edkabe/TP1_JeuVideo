@@ -1,161 +1,817 @@
-<?xml version="1.0" encoding="utf-8"?><diagram program="umletino" version="15.1"><zoom_level>10</zoom_level><help_text>Modele C++ : Scene et EventObserver sont des classes abstraites avec des fonctions virtuelles pures. Chaque Scene possede son EventManager.</help_text><element><id>UMLClass</id><coordinates><x>360</x><y>60</y><w>260</w><h>160</h></coordinates><panel_attributes>Engine
+<?xml version='1.0' encoding='utf-8'?>
+<diagram program="umletino" version="15.1">
+  <zoom_level>10</zoom_level>
+  <help_text>Scene reste abstraite. Les ressources polymorphes sont partagées par shared_ptr. Modèle généré par generer_diagramme.py.</help_text>
+  <element>
+    <id>UMLNote</id>
+    <coordinates>
+      <x>40</x>
+      <y>35</y>
+      <w>1500</w>
+      <h>60</h>
+    </coordinates>
+    <panel_attributes>1. Moteur et paramètres</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>580</x>
+      <y>110</y>
+      <w>480</w>
+      <h>226</h>
+    </coordinates>
+    <panel_attributes>Engine
 --
-- instance: Engine
-- running: bool
+- static instance : Engine
+- running : bool
 --
-+ run(): void
-+ stop(): void
-+ getInstance(): Engine</panel_attributes><additional_attributes /></element><element><id>UMLClass</id><coordinates><x>60</x><y>60</y><w>240</w><h>140</h></coordinates><panel_attributes>Window
++ static getInstance() : Engine&amp;
++ run() : bool
++ stop() : void
++ getSettings() : EngineSettings&amp;</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>60</x>
+      <y>460</y>
+      <w>480</w>
+      <h>199</h>
+    </coordinates>
+    <panel_attributes>Window
 --
-- SDLWindow: SDL_Window*
-- context: GLContext
+- window : SDL_Window*
+- context : SDL_GLContext
 --
-+ initialize(): bool
-+ swapBuffers(): void
-+ close(): void</panel_attributes><additional_attributes /></element><element><id>UMLClass</id><coordinates><x>60</x><y>250</y><w>240</w><h>150</h></coordinates><panel_attributes>EngineSettings
++ initialize() : bool
++ swapBuffers() : void
++ close() : void</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>580</x>
+      <y>460</y>
+      <w>480</w>
+      <h>280</h>
+    </coordinates>
+    <panel_attributes>EngineSettings
 --
-- language: string
-- resolution: Vector2
-- fullscreen: bool
-- vsync: bool
+- language : string
+- resolution : Vector2
+- fullscreen, vsync : bool
+- mouseSensitivity, fov : float
+- programBinaryFormat : GLenum
 --
-+ load(): bool
-+ save(): bool</panel_attributes><additional_attributes /></element><element><id>UMLClass</id><coordinates><x>360</x><y>270</y><w>260</w><h>150</h></coordinates><panel_attributes>Renderer2D
++ load() : bool
++ save() : bool
++ getters / setters</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1100</x>
+      <y>460</y>
+      <w>480</w>
+      <h>172</h>
+    </coordinates>
+    <panel_attributes>SceneManager
 --
-- program: Program
-- viewProjection: Matrix4
+- current : Scene*
 --
-+ begin(): void
-+ draw(component): void
-+ end(): void</panel_attributes><additional_attributes /></element><element><id>UMLClass</id><coordinates><x>700</x><y>60</y><w>280</w><h>160</h></coordinates><panel_attributes>ResourceManager
++ add(name, scene) : bool
++ remove(name) : bool
++ change(name) : bool</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>60</x>
+      <y>960</y>
+      <w>480</w>
+      <h>131</h>
+    </coordinates>
+    <panel_attributes>ResourceManager
 --
-- resources: Map&lt;string, Resource&gt;
 --
-+ add(name, resource): void
-+ get(name): Resource
-+ remove(name): void</panel_attributes><additional_attributes /></element><element><id>UMLClass</id><coordinates><x>700</x><y>270</y><w>240</w><h>130</h></coordinates><panel_attributes>&lt;&lt;abstract&gt;&gt; Resource
++ add&lt;T&gt;(name, resource) : bool
++ get&lt;T&gt;(name) : shared_ptr&lt;T&gt;
++ remove(name) : bool</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1100</x>
+      <y>960</y>
+      <w>480</w>
+      <h>199</h>
+    </coordinates>
+    <panel_attributes>Renderer2D
 --
-- loaded: bool
+- program : Program
+- viewProjection : Matrix4
 --
-+ load(): bool
-+ release(): void</panel_attributes><additional_attributes /></element><element><id>UMLClass</id><coordinates><x>620</x><y>450</y><w>200</w><h>110</h></coordinates><panel_attributes>Texture
++ begin() : void
++ draw(component) : void
++ end() : void</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>300</x>
+      <y>336</y>
+      <w>520</w>
+      <h>124</h>
+    </coordinates>
+    <panel_attributes>lt=-
+1 fenêtre</panel_attributes>
+    <additional_attributes>520;0;0;124</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>820</x>
+      <y>336</y>
+      <w>10</w>
+      <h>124</h>
+    </coordinates>
+    <panel_attributes>lt=-
+1 configuration</panel_attributes>
+    <additional_attributes>0;0;0;124</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>820</x>
+      <y>336</y>
+      <w>520</w>
+      <h>124</h>
+    </coordinates>
+    <panel_attributes>lt=-
+1 gestionnaire</panel_attributes>
+    <additional_attributes>0;0;520;124</additional_attributes>
+  </element>
+  <element>
+    <id>UMLNote</id>
+    <coordinates>
+      <x>1680</x>
+      <y>35</y>
+      <w>1500</w>
+      <h>60</h>
+    </coordinates>
+    <panel_attributes>2. Ressources et rendu</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1700</x>
+      <y>110</y>
+      <w>480</w>
+      <h>226</h>
+    </coordinates>
+    <panel_attributes>ResourceManager
 --
-- width, height: int
+- resources : unordered_map&lt;
+    string, shared_ptr&lt;Resource&gt;&gt;
 --
-+ load(): bool</panel_attributes><additional_attributes /></element><element><id>UMLClass</id><coordinates><x>840</x><y>450</y><w>200</w><h>110</h></coordinates><panel_attributes>Font
++ add&lt;T&gt;(name, resource) : bool
++ get&lt;T&gt;(name) : shared_ptr&lt;T&gt;
++ remove(name) : bool
++ clear() : void</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>2220</x>
+      <y>110</y>
+      <w>480</w>
+      <h>131</h>
+    </coordinates>
+    <panel_attributes>«abstract» Resource
 --
-- pointSize: int
 --
-+ load(): bool</panel_attributes><additional_attributes /></element><element><id>UMLClass</id><coordinates><x>1120</x><y>60</y><w>280</w><h>160</h></coordinates><panel_attributes>SceneManager
++ virtual ~Resource()
++ virtual load() : bool = 0
++ virtual release() : void = 0</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>2220</x>
+      <y>470</y>
+      <w>480</w>
+      <h>226</h>
+    </coordinates>
+    <panel_attributes>Texture
 --
-- scenes: Map&lt;string, Scene*&gt;
-- current: Scene*
+- id : GLuint
+- width, height : int
 --
-+ add(name, scene): void
-+ change(name): void
-+ update(): void</panel_attributes><additional_attributes /></element><element><id>UMLClass</id><coordinates><x>1120</x><y>290</y><w>260</w><h>190</h></coordinates><panel_attributes>&lt;&lt;abstract&gt;&gt; Scene
++ load() : bool
++ release() : void
++ bind() : void
++ explicit operator GLuint() const</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>2740</x>
+      <y>470</y>
+      <w>480</w>
+      <h>199</h>
+    </coordinates>
+    <panel_attributes>Font
 --
-- events: EventManager
-- controls: VisualComponent*[]
+- handle : TTF_Font*
+- pointSize : float
 --
-+ virtual activate(): void
-+ virtual deactivate(): void
-+ virtual handleEvents(): void = 0
-+ virtual update(dt): void = 0
-+ virtual render(): void = 0</panel_attributes><additional_attributes /></element><element><id>UMLClass</id><coordinates><x>900</x><y>740</y><w>200</w><h>100</h></coordinates><panel_attributes>MainScene
++ load() : bool
++ release() : void
++ explicit operator TTF_Font*() const</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1700</x>
+      <y>940</y>
+      <w>480</w>
+      <h>226</h>
+    </coordinates>
+    <panel_attributes>Program
 --
-+ activate(): void</panel_attributes><additional_attributes /></element><element><id>UMLClass</id><coordinates><x>1120</x><y>740</y><w>200</w><h>100</h></coordinates><panel_attributes>SettingsScene
+- id : GLuint
 --
-+ activate(): void</panel_attributes><additional_attributes /></element><element><id>UMLClass</id><coordinates><x>1340</x><y>740</y><w>200</w><h>100</h></coordinates><panel_attributes>CreditsScene
++ attach(shader) : void
++ link() : bool
++ use() : void
++ loadBinary(path) : bool
++ saveBinary(path) : bool</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>2220</x>
+      <y>940</y>
+      <w>480</w>
+      <h>172</h>
+    </coordinates>
+    <panel_attributes>Shader
 --
-+ activate(): void</panel_attributes><additional_attributes /></element><element><id>UMLClass</id><coordinates><x>1530</x><y>500</y><w>240</w><h>140</h></coordinates><panel_attributes>EventManager
+- id : GLuint
+- type : ShaderType
 --
-- observers: EventObserver*[]
-- queue: Event[]
++ compile(path) : bool
++ release() : void</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>2740</x>
+      <y>940</y>
+      <w>480</w>
+      <h>172</h>
+    </coordinates>
+    <panel_attributes>Buffer
 --
-+ subscribe(observer): void
-+ unsubscribe(observer): void
-+ dispatch(event): void</panel_attributes><additional_attributes /></element><element><id>UMLClass</id><coordinates><x>1530</x><y>290</y><w>240</w><h>110</h></coordinates><panel_attributes>&lt;&lt;abstract&gt;&gt; EventObserver
+- id : GLuint
 --
-+ virtual onEvent(event): void = 0</panel_attributes><additional_attributes /></element><element><id>UMLClass</id><coordinates><x>1810</x><y>500</y><w>200</w><h>110</h></coordinates><panel_attributes>Event
++ upload(data) : void
++ bind() : void
++ release() : void</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>2180</x>
+      <y>175</y>
+      <w>40</w>
+      <h>48</h>
+    </coordinates>
+    <panel_attributes>lt=-
+0..* ressources</panel_attributes>
+    <additional_attributes>0;48;40;0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>2460</x>
+      <y>241</y>
+      <w>10</w>
+      <h>229</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;-
+</panel_attributes>
+    <additional_attributes>0;229;0;0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>2460</x>
+      <y>241</y>
+      <w>520</w>
+      <h>229</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;-
+</panel_attributes>
+    <additional_attributes>520;229;0;0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>2180</x>
+      <y>1026</y>
+      <w>40</w>
+      <h>27</h>
+    </coordinates>
+    <panel_attributes>lt=-
+lie 1..*</panel_attributes>
+    <additional_attributes>0;27;40;0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLNote</id>
+    <coordinates>
+      <x>40</x>
+      <y>1485</y>
+      <w>1500</w>
+      <h>60</h>
+    </coordinates>
+    <panel_attributes>3. Scènes et événements</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>60</x>
+      <y>1560</y>
+      <w>480</w>
+      <h>226</h>
+    </coordinates>
+    <panel_attributes>SceneManager
 --
-- type: EventType
-- payload: data</panel_attributes><additional_attributes /></element><element><id>UMLClass</id><coordinates><x>1810</x><y>60</y><w>260</w><h>150</h></coordinates><panel_attributes>&lt;&lt;abstract&gt;&gt; VisualComponent
+- scenes : unordered_map&lt;
+    string, unique_ptr&lt;Scene&gt;&gt;
+- current : Scene*
 --
-- position: Vector2
-- size: Vector2
-- visible: bool
++ add(name, scene) : bool
++ remove(name) : bool
++ change(name) : bool</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>580</x>
+      <y>1560</y>
+      <w>480</w>
+      <h>307</h>
+    </coordinates>
+    <panel_attributes>«abstract» Scene
 --
-+ update(dt): void
-+ render(renderer): void</panel_attributes><additional_attributes /></element><element><id>UMLClass</id><coordinates><x>1570</x><y>270</y><w>180</w><h>100</h></coordinates><panel_attributes>Button
+- events : EventManager
+- controls : vector&lt;
+    unique_ptr&lt;VisualComponent&gt;&gt;
 --
-+ onEvent(event): void</panel_attributes><additional_attributes /></element><element><id>UMLClass</id><coordinates><x>1770</x><y>270</y><w>180</w><h>100</h></coordinates><panel_attributes>Label
++ virtual ~Scene()
++ virtual activate() : bool = 0
++ virtual deactivate() : void = 0
++ virtual handleEvents() : void = 0
++ virtual update(dt) : void = 0
++ virtual render() : void = 0</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1100</x>
+      <y>1560</y>
+      <w>480</w>
+      <h>172</h>
+    </coordinates>
+    <panel_attributes>EventManager
 --
-+ render(renderer): void</panel_attributes><additional_attributes /></element><element><id>UMLClass</id><coordinates><x>1970</x><y>270</y><w>180</w><h>100</h></coordinates><panel_attributes>Image
+- observers : EventObserver*[]
 --
-+ render(renderer): void</panel_attributes><additional_attributes /></element><element><id>UMLClass</id><coordinates><x>2050</x><y>500</y><w>220</w><h>130</h></coordinates><panel_attributes>Program
++ subscribe(observer) : void
++ unsubscribe(observer) : void
++ dispatch(event) : void</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>60</x>
+      <y>2120</y>
+      <w>480</w>
+      <h>185</h>
+    </coordinates>
+    <panel_attributes>MainScene
 --
-- shaders: Shader[]
 --
-+ link(): bool
-+ use(): void</panel_attributes><additional_attributes /></element><element><id>UMLClass</id><coordinates><x>2050</x><y>700</y><w>220</w><h>100</h></coordinates><panel_attributes>Shader
++ activate() : bool
++ deactivate() : void
++ handleEvents() : void
++ update(dt) : void
++ render() : void</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>580</x>
+      <y>2120</y>
+      <w>480</w>
+      <h>185</h>
+    </coordinates>
+    <panel_attributes>SettingsScene
 --
-- type: ShaderType
 --
-+ compile(): bool</panel_attributes><additional_attributes /></element><element><id>UMLClass</id><coordinates><x>2300</x><y>500</y><w>200</w><h>120</h></coordinates><panel_attributes>Buffer
++ activate() : bool
++ deactivate() : void
++ handleEvents() : void
++ update(dt) : void
++ render() : void</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1100</x>
+      <y>2120</y>
+      <w>480</w>
+      <h>185</h>
+    </coordinates>
+    <panel_attributes>CreditsScene
 --
-- data: bytes
 --
-+ upload(): void</panel_attributes><additional_attributes /></element><element><id>UMLClass</id><coordinates><x>360</x><y>500</y><w>220</w><h>120</h></coordinates><panel_attributes>Matrix4
++ activate() : bool
++ deactivate() : void
++ handleEvents() : void
++ update(dt) : void
++ render() : void</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>60</x>
+      <y>2550</y>
+      <w>480</w>
+      <h>104</h>
+    </coordinates>
+    <panel_attributes>«abstract» EventObserver
 --
-+ identity(): Matrix4
-+ orthographic(...): Matrix4</panel_attributes><additional_attributes /></element><element><id>UMLClass</id><coordinates><x>60</x><y>500</y><w>220</w><h>100</h></coordinates><panel_attributes>Vector2
 --
-+ x, y: float</panel_attributes><additional_attributes /></element><element><id>UMLClass</id><coordinates><x>60</x><y>650</y><w>220</w><h>100</h></coordinates><panel_attributes>Color
++ virtual ~EventObserver()
++ virtual onEvent(event) : void = 0</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1100</x>
+      <y>2550</y>
+      <w>480</w>
+      <h>118</h>
+    </coordinates>
+    <panel_attributes>Event
 --
-+ r, g, b, a: float</panel_attributes><additional_attributes /></element><element><id>Relation</id><coordinates><x>180</x><y>130</y><w>310</w><h>10</h></coordinates><panel_attributes>lt=-
-m1=1
-m2=1
-r1=window</panel_attributes><additional_attributes>310;10;0;0</additional_attributes></element><element><id>Relation</id><coordinates><x>180</x><y>140</y><w>310</w><h>185</h></coordinates><panel_attributes>lt=-
-m1=1
-m2=1
-r1=settings</panel_attributes><additional_attributes>310;0;0;185</additional_attributes></element><element><id>Relation</id><coordinates><x>490</x><y>140</y><w>10</w><h>205</h></coordinates><panel_attributes>lt=-
-m1=1
-m2=1
-r1=renderer</panel_attributes><additional_attributes>0;0;0;205</additional_attributes></element><element><id>Relation</id><coordinates><x>490</x><y>140</y><w>350</w><h>10</h></coordinates><panel_attributes>lt=-
-m1=1
-m2=1
-r1=resources</panel_attributes><additional_attributes>0;0;350;0</additional_attributes></element><element><id>Relation</id><coordinates><x>490</x><y>140</y><w>770</w><h>10</h></coordinates><panel_attributes>lt=-
-m1=1
-m2=1
-r1=scenes</panel_attributes><additional_attributes>0;0;770;0</additional_attributes></element><element><id>Relation</id><coordinates><x>0</x><y>0</y><w>840</w><h>140</h></coordinates><panel_attributes>lt=-
-m1=1
-m2=0..*
-r1=manages</panel_attributes><additional_attributes>840;140;0;0</additional_attributes></element><element><id>Relation</id><coordinates><x>0</x><y>0</y><w>720</w><h>505</h></coordinates><panel_attributes>lt=&lt;&lt;-</panel_attributes><additional_attributes>0;0;720;505</additional_attributes></element><element><id>Relation</id><coordinates><x>0</x><y>0</y><w>940</w><h>505</h></coordinates><panel_attributes>lt=&lt;&lt;-</panel_attributes><additional_attributes>0;0;940;505</additional_attributes></element><element><id>Relation</id><coordinates><x>1250</x><y>140</y><w>10</w><h>245</h></coordinates><panel_attributes>lt=-
-m1=1
-m2=0..*
-r1=stores</panel_attributes><additional_attributes>10;0;0;245</additional_attributes></element><element><id>Relation</id><coordinates><x>1000</x><y>385</y><w>250</w><h>405</h></coordinates><panel_attributes>lt=&lt;&lt;-</panel_attributes><additional_attributes>250;0;0;405</additional_attributes></element><element><id>Relation</id><coordinates><x>1220</x><y>385</y><w>30</w><h>405</h></coordinates><panel_attributes>lt=&lt;&lt;-</panel_attributes><additional_attributes>30;0;0;405</additional_attributes></element><element><id>Relation</id><coordinates><x>1250</x><y>385</y><w>190</w><h>405</h></coordinates><panel_attributes>lt=&lt;&lt;-</panel_attributes><additional_attributes>0;0;190;405</additional_attributes></element><element><id>Relation</id><coordinates><x>1250</x><y>385</y><w>400</w><h>185</h></coordinates><panel_attributes>lt=-
-m1=1
-m2=1
-r1=owns</panel_attributes><additional_attributes>0;0;400;185</additional_attributes></element><element><id>Relation</id><coordinates><x>1650</x><y>345</y><w>10</w><h>225</h></coordinates><panel_attributes>lt=-
-m1=1
-m2=0..*
-r1=notifies</panel_attributes><additional_attributes>0;225;0;0</additional_attributes></element><element><id>Relation</id><coordinates><x>1650</x><y>555</y><w>260</w><h>15</h></coordinates><panel_attributes>lt=-
-m1=1
-m2=0..*
-r1=dispatches</panel_attributes><additional_attributes>0;15;260;0</additional_attributes></element><element><id>Relation</id><coordinates><x>0</x><y>0</y><w>1250</w><h>385</h></coordinates><panel_attributes>lt=-
-m1=1
-m2=0..*
-r1=contains</panel_attributes><additional_attributes>1250;385;0;0</additional_attributes></element><element><id>Relation</id><coordinates><x>0</x><y>0</y><w>1660</w><h>320</h></coordinates><panel_attributes>lt=&lt;&lt;-</panel_attributes><additional_attributes>0;0;1660;320</additional_attributes></element><element><id>Relation</id><coordinates><x>0</x><y>0</y><w>1860</w><h>320</h></coordinates><panel_attributes>lt=&lt;&lt;-</panel_attributes><additional_attributes>0;0;1860;320</additional_attributes></element><element><id>Relation</id><coordinates><x>0</x><y>0</y><w>2060</w><h>320</h></coordinates><panel_attributes>lt=&lt;&lt;-</panel_attributes><additional_attributes>0;0;2060;320</additional_attributes></element><element><id>Relation</id><coordinates><x>490</x><y>345</y><w>1670</w><h>220</h></coordinates><panel_attributes>lt=-
-m1=1
-m2=1
-r1=uses</panel_attributes><additional_attributes>0;0;1670;220</additional_attributes></element><element><id>Relation</id><coordinates><x>2160</x><y>565</y><w>10</w><h>185</h></coordinates><panel_attributes>lt=-
-m1=1
-m2=1..*
-r1=links</panel_attributes><additional_attributes>0;0;0;185</additional_attributes></element><element><id>Relation</id><coordinates><x>490</x><y>345</y><w>1910</w><h>215</h></coordinates><panel_attributes>lt=-
-m1=1
-m2=1..*
-r1=draws</panel_attributes><additional_attributes>0;0;1910;215</additional_attributes></element><element><id>Relation</id><coordinates><x>470</x><y>345</y><w>20</w><h>215</h></coordinates><panel_attributes>lt=-
-m1=1
-m2=1
-r1=uses</panel_attributes><additional_attributes>20;0;0;215</additional_attributes></element></diagram>
+- type : EventType
+- payload : données
+--</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>540</x>
+      <y>1673</y>
+      <w>40</w>
+      <h>40</h>
+    </coordinates>
+    <panel_attributes>lt=-
+0..* scènes</panel_attributes>
+    <additional_attributes>0;0;40;40</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>1060</x>
+      <y>1646</y>
+      <w>40</w>
+      <h>67</h>
+    </coordinates>
+    <panel_attributes>lt=-
+1 par scène</panel_attributes>
+    <additional_attributes>0;67;40;0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>300</x>
+      <y>1867</y>
+      <w>520</w>
+      <h>253</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;-
+</panel_attributes>
+    <additional_attributes>0;253;520;0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>820</x>
+      <y>1867</y>
+      <w>10</w>
+      <h>253</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;-
+</panel_attributes>
+    <additional_attributes>0;253;0;0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>820</x>
+      <y>1867</y>
+      <w>520</w>
+      <h>253</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;-
+</panel_attributes>
+    <additional_attributes>520;253;0;0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLNote</id>
+    <coordinates>
+      <x>1680</x>
+      <y>1485</y>
+      <w>1500</w>
+      <h>60</h>
+    </coordinates>
+    <panel_attributes>4. Contrôles visuels</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>2220</x>
+      <y>1560</y>
+      <w>480</w>
+      <h>199</h>
+    </coordinates>
+    <panel_attributes>«abstract» VisualComponent
+--
+# position, size : Vector2
+- visible : bool
+--
++ virtual ~VisualComponent()
++ update(dt) : void
++ virtual render(renderer) : void = 0</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1700</x>
+      <y>1950</y>
+      <w>480</w>
+      <h>118</h>
+    </coordinates>
+    <panel_attributes>Image
+--
+- texture : shared_ptr&lt;Texture&gt;
+--
++ resize(w, h, keepAspect) : void</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>2220</x>
+      <y>1950</y>
+      <w>480</w>
+      <h>172</h>
+    </coordinates>
+    <panel_attributes>Label
+--
+- font : shared_ptr&lt;Font&gt;
+- text : string
+- color : Color
+--
++ setText(text) : void</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>2740</x>
+      <y>1950</y>
+      <w>480</w>
+      <h>172</h>
+    </coordinates>
+    <panel_attributes>Button
+--
+- title : Label
+- border, background, hover : Color
+--
++ onEvent(event) : void
++ événement clicked</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1700</x>
+      <y>2300</y>
+      <w>480</w>
+      <h>145</h>
+    </coordinates>
+    <panel_attributes>ProgressBar
+--
+- min, value, max : float
+- border, background, fill : Color
+--
++ setValue(value) : void</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>2220</x>
+      <y>2300</y>
+      <w>480</w>
+      <h>172</h>
+    </coordinates>
+    <panel_attributes>CheckBox
+--
+- checked : bool
+- border, background, tick : Color
+--
++ isChecked() : bool
++ onEvent(event) : void</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>2740</x>
+      <y>2300</y>
+      <w>480</w>
+      <h>199</h>
+    </coordinates>
+    <panel_attributes>Selector
+--
+- items : vector&lt;string&gt;
+- selectedIndex : int
+- previous, next : Button
+- selectedLabel : Label
+--
++ getSelected() : string</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1700</x>
+      <y>2620</y>
+      <w>480</w>
+      <h>199</h>
+    </coordinates>
+    <panel_attributes>Slider
+--
+- min, value, max, step : float
+- border, background, fill : Color
+- hover : Color
+--
++ getValue() : float
++ onEvent(event) : void</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>2220</x>
+      <y>2620</y>
+      <w>480</w>
+      <h>77</h>
+    </coordinates>
+    <panel_attributes>Vector2 / Matrix4
+--
+--
+types et opérations basés sur GLM</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>2740</x>
+      <y>2620</y>
+      <w>480</w>
+      <h>91</h>
+    </coordinates>
+    <panel_attributes>Color
+--
++ r, g, b, a : float
+--</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>1940</x>
+      <y>1759</y>
+      <w>520</w>
+      <h>191</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;-
+</panel_attributes>
+    <additional_attributes>0;191;520;0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>2460</x>
+      <y>1759</y>
+      <w>10</w>
+      <h>191</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;-
+</panel_attributes>
+    <additional_attributes>0;191;0;0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>2460</x>
+      <y>1759</y>
+      <w>520</w>
+      <h>191</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;-
+</panel_attributes>
+    <additional_attributes>520;191;0;0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>2220</x>
+      <y>1560</y>
+      <w>520</w>
+      <h>740</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;-
+</panel_attributes>
+    <additional_attributes>240;199;-280;740</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>2220</x>
+      <y>1560</y>
+      <w>10</w>
+      <h>740</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;-
+</panel_attributes>
+    <additional_attributes>240;199;240;740</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>2220</x>
+      <y>1560</y>
+      <w>520</w>
+      <h>740</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;-
+</panel_attributes>
+    <additional_attributes>240;199;760;740</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>2220</x>
+      <y>1560</y>
+      <w>520</w>
+      <h>1060</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;-
+</panel_attributes>
+    <additional_attributes>240;199;-280;1060</additional_attributes>
+  </element>
+</diagram>
