@@ -1,5 +1,6 @@
 {
 	"workbench.startupEditor": "none",
+	"cmake.useCMakePresets": "always",
 	"editor.minimap.enabled": false,
 	"editor.insertSpaces": false,
 	"editor.tabSize": 2,

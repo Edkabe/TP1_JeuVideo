@@ -35,12 +35,19 @@ else()
     message(FATAL_ERROR "Ce squelette fournit des binaires Windows et macOS.")
 endif()
 
-add_library(moteur STATIC src/moteur/Bibliotheques.cpp)
+add_library(moteur STATIC
+    src/moteur/Bibliotheques.cpp
+    src/moteur/Engine.cpp
+    src/moteur/Window.cpp
+    src/moteur/Shader.cpp
+    src/moteur/Program.cpp
+    src/moteur/VAO.cpp)
 target_include_directories(moteur PUBLIC "${PROJECT_SOURCE_DIR}/include")
 target_link_libraries(moteur PUBLIC dependances)
 set_target_properties(moteur PROPERTIES CXX_EXTENSIONS OFF)
 add_executable(program src/main.cpp)
 target_link_libraries(program PRIVATE moteur)
+target_compile_definitions(program PRIVATE MOTEUR_SHADER_DIR="${PROJECT_SOURCE_DIR}/assets/shaders")
 set_target_properties(program PROPERTIES CXX_EXTENSIONS OFF)
 if(MSVC)
     target_compile_options(moteur PRIVATE /W4 /utf-8)
