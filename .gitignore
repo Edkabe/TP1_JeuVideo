@@ -3,3 +3,9 @@
 /CMakeUserPresets.json
 /.vs/
 *.user
+/build/obj/
+/build/lib/moteur.lib
+/build/program.exe
+/build/program.pdb
+/build/program.ilk
+/build/assets/
