@@ -3,18 +3,32 @@
 #include <SDL3/SDL_main.h>
 #include "moteur/Bibliotheques.h"
 #include "moteur/Engine.h"
+#include "moteur/Font.h"
+#include "moteur/Label.h"
 #include "moteur/VertexShader.h"
 #include "moteur/Program.h"
 #include "moteur/VAO.h"
 #include "moteur/VBO.h"
 #include <array>
 #include <filesystem>
+#include <cstdlib>
 #include <iostream>
+#include <memory>
 #include <string_view>
 #include <type_traits>
 #include <utility>
+#include <vector>
 
 namespace {
+std::string readWindowsDirectory() {
+  char* value = nullptr;
+  size_t size = 0;
+  if (_dupenv_s(&value, &size, "WINDIR") != 0 || !value) return {};
+  std::string result(value);
+  std::free(value);
+  return result;
+}
+
 // Vérifie le transfert et la libération sous un contexte OpenGL actif.
 bool verifyBufferLifetime() {
   static_assert(!std::is_copy_constructible_v<moteur::VBO>);
@@ -68,8 +82,76 @@ bool verifyBufferLifetime() {
   return valid && glGetError() == GL_NO_ERROR;
 }
 }
-
 namespace {
+bool verifyLabel() {
+  auto& engine = moteur::Engine::getInstance();
+  if (!engine.initialize("TP1 - verification etiquette", 320, 160, true)) {
+    std::cerr << engine.getError() << '\n'; return false;
+  }
+  bool valid = true;
+  const std::string windowsDirectory = readWindowsDirectory();
+  const std::filesystem::path fontPath = windowsDirectory.empty()
+      ? std::filesystem::path{} : std::filesystem::path(windowsDirectory) / "Fonts" / "arial.ttf";
+  auto font = std::make_shared<moteur::Font>(28.0f, "Police de verification");
+  valid = valid && !fontPath.empty() && font->load(fontPath.string());
+  if (!valid) {
+    std::cerr << (font->getError().empty() ? "Police de verification introuvable.\n" : font->getError() + "\n");
+    engine.shutdown(); return false;
+  }
+  valid = engine.getResourceManager().add("police-verification", font);
+  std::weak_ptr<moteur::Font> weakFont = font;
+  font.reset();
+
+  const auto countRedPixels = [] {
+    GLint viewport[4]{};
+    glGetIntegerv(GL_VIEWPORT, viewport);
+    std::vector<unsigned char> pixels(static_cast<size_t>(viewport[2] * viewport[3] * 4));
+    glReadPixels(0, 0, viewport[2], viewport[3], GL_RGBA, GL_UNSIGNED_BYTE, pixels.data());
+    size_t count = 0;
+    for (size_t i = 0; i + 3 < pixels.size(); i += 4)
+      if (pixels[i] > 80 && pixels[i + 1] < 40 && pixels[i + 2] < 40) ++count;
+    return count;
+  };
+
+  size_t widePixels = 0, narrowPixels = 0;
+  {
+    auto sharedFont = engine.getResourceManager().get<moteur::Font>("police-verification");
+    moteur::Label label(sharedFont, "MMMM");
+    sharedFont.reset();
+    label.setPosition({12.0f, 12.0f});
+    label.setColor({1.0f, 0.0f, 0.0f, 1.0f});
+    const moteur::Vector2 wideSize = label.getDimensions();
+    valid = valid && wideSize.x > 0 && wideSize.y > 0;
+
+    int width = 0, height = 0;
+    valid = valid && engine.getWindow().getPixelSize(width, height);
+    glViewport(0, 0, width, height);
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+    valid = valid && label.render();
+    glFinish();
+    widePixels = countRedPixels();
+    valid = valid && widePixels > 0;
+
+    valid = valid && label.setText("i");
+    const moteur::Vector2 narrowSize = label.getDimensions();
+    valid = valid && narrowSize.x > 0 && narrowSize.y > 0 && wideSize.x > narrowSize.x;
+    glClear(GL_COLOR_BUFFER_BIT);
+    valid = valid && label.render();
+    glFinish();
+    narrowPixels = countRedPixels();
+    valid = valid && narrowPixels > 0 && narrowPixels != widePixels;
+
+    // Le contrôle conserve la ressource tant qu'il l'utilise, même après retrait du gestionnaire.
+    valid = valid && engine.getResourceManager().remove("police-verification") && !weakFont.expired();
+  }
+  // L'étiquette et ses objets GL sont détruits avant le contexte de la fenêtre.
+  valid = valid && weakFont.expired() && glGetError() == GL_NO_ERROR;
+  valid = engine.shutdown() && valid;
+  if (!valid) std::cerr << "Echec d'une verification du controle Etiquette.\n";
+  return valid;
+}
+
 bool demonstrate(moteur::Engine& engine, bool smoke) {
   // Ces objets sont détruits avant Engine::shutdown(), contexte encore actif.
   moteur::VertexShader vertex;
@@ -77,6 +159,18 @@ bool demonstrate(moteur::Engine& engine, bool smoke) {
   moteur::Program program;
   moteur::VAO vao;
   moteur::VBO vbo;
+  auto labelFont = std::make_shared<moteur::Font>(28.0f, "Police de demonstration");
+  bool labelAvailable = false;
+  if (const std::string windowsDirectory = readWindowsDirectory(); !windowsDirectory.empty()) {
+    const auto fontPath = std::filesystem::path(windowsDirectory) / "Fonts" / "arial.ttf";
+    labelAvailable = labelFont->load(fontPath.string()) &&
+        engine.getResourceManager().add("police-demonstration", labelFont);
+  }
+  moteur::Label label(labelAvailable
+      ? engine.getResourceManager().get<moteur::Font>("police-demonstration")
+      : std::shared_ptr<moteur::Font>{}, "TP1 - Controle Etiquette");
+  label.setPosition({18.0f, 18.0f});
+  label.setColor({1.0f, 1.0f, 1.0f, 1.0f});
   const char* basePath = SDL_GetBasePath();
   if (!basePath) { std::cerr << SDL_GetError() << '\n'; return false; }
   const std::filesystem::path shaders = std::filesystem::path(basePath) / "assets" / "shaders";
@@ -135,6 +229,9 @@ bool demonstrate(moteur::Engine& engine, bool smoke) {
     glClear(GL_COLOR_BUFFER_BIT);
     program.use(); vao.bind();
     glDrawArrays(GL_TRIANGLES, 0, 3);
+    if (labelAvailable && !label.render()) {
+      std::cerr << label.getError() << '\n'; valid = false; engine.stop(); return;
+    }
     if (smoke) {
       unsigned char pixel[4]{};
       glReadPixels(width / 2, height / 2, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, pixel);
@@ -157,6 +254,7 @@ bool demonstrate(moteur::Engine& engine, bool smoke) {
 /// @return Code de fin de programme
 int main(int argc, char* argv[]) {
   const std::string_view mode = argc > 1 ? argv[1] : "";
+  if (mode == "--label-check") return verifyLabel() ? 0 : 1;
   if (mode == "--check") return moteur::verifierBibliotheques() ? 0 : 1;
   const bool smoke = mode == "--smoke";
   auto& engine = moteur::Engine::getInstance();

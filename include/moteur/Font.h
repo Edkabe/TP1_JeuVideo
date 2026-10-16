@@ -12,6 +12,8 @@ public:
     void release() override;
     float getPointSize() const { return pointSize; }
     int getHeight() const;
+    // Mesure une chaîne UTF-8 pour que les contrôles puissent calculer leur taille.
+    bool measureText(const std::string& text, int& width, int& height) const;
     explicit operator TTF_Font*() const { return handle; }
 private:
     TTF_Font* handle = nullptr;
