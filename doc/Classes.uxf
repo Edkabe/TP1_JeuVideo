@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><diagram program="umletino" version="15.1"><zoom_level>10</zoom_level><help_text>Diagramme de classes du moteur de jeu. Les scenes concretes implementent IScene via AbstractScene. Chaque AbstractScene possede son propre EventManager.</help_text><element><id>UMLClass</id><coordinates><x>360</x><y>60</y><w>260</w><h>160</h></coordinates><panel_attributes>Engine
+<?xml version="1.0" encoding="utf-8"?><diagram program="umletino" version="15.1"><zoom_level>10</zoom_level><help_text>Modele C++ : Scene et EventObserver sont des classes abstraites avec des fonctions virtuelles pures. Chaque Scene possede son EventManager.</help_text><element><id>UMLClass</id><coordinates><x>360</x><y>60</y><w>260</w><h>160</h></coordinates><panel_attributes>Engine
 --
 - instance: Engine
 - running: bool
@@ -48,25 +48,21 @@
 --
 + load(): bool</panel_attributes><additional_attributes /></element><element><id>UMLClass</id><coordinates><x>1120</x><y>60</y><w>280</w><h>160</h></coordinates><panel_attributes>SceneManager
 --
-- scenes: Map&lt;string, IScene&gt;
-- current: IScene
+- scenes: Map&lt;string, Scene*&gt;
+- current: Scene*
 --
 + add(name, scene): void
 + change(name): void
-+ update(): void</panel_attributes><additional_attributes /></element><element><id>UMLClass</id><coordinates><x>1120</x><y>290</y><w>260</w><h>140</h></coordinates><panel_attributes>&lt;&lt;interface&gt;&gt; IScene
---
-+ activate(): void
-+ deactivate(): void
-+ handleEvents(): void
-+ update(dt): void
-+ render(): void</panel_attributes><additional_attributes /></element><element><id>UMLClass</id><coordinates><x>1120</x><y>500</y><w>280</w><h>160</h></coordinates><panel_attributes>&lt;&lt;abstract&gt;&gt; AbstractScene
++ update(): void</panel_attributes><additional_attributes /></element><element><id>UMLClass</id><coordinates><x>1120</x><y>290</y><w>260</w><h>190</h></coordinates><panel_attributes>&lt;&lt;abstract&gt;&gt; Scene
 --
 - events: EventManager
-- controls: VisualComponent[]
+- controls: VisualComponent*[]
 --
-+ handleEvents(): void
-+ update(dt): void
-+ render(): void</panel_attributes><additional_attributes /></element><element><id>UMLClass</id><coordinates><x>900</x><y>740</y><w>200</w><h>100</h></coordinates><panel_attributes>MainScene
++ virtual activate(): void
++ virtual deactivate(): void
++ virtual handleEvents(): void = 0
++ virtual update(dt): void = 0
++ virtual render(): void = 0</panel_attributes><additional_attributes /></element><element><id>UMLClass</id><coordinates><x>900</x><y>740</y><w>200</w><h>100</h></coordinates><panel_attributes>MainScene
 --
 + activate(): void</panel_attributes><additional_attributes /></element><element><id>UMLClass</id><coordinates><x>1120</x><y>740</y><w>200</w><h>100</h></coordinates><panel_attributes>SettingsScene
 --
@@ -74,14 +70,14 @@
 --
 + activate(): void</panel_attributes><additional_attributes /></element><element><id>UMLClass</id><coordinates><x>1530</x><y>500</y><w>240</w><h>140</h></coordinates><panel_attributes>EventManager
 --
-- observers: EventObserver[]
+- observers: EventObserver*[]
 - queue: Event[]
 --
 + subscribe(observer): void
 + unsubscribe(observer): void
-+ dispatch(event): void</panel_attributes><additional_attributes /></element><element><id>UMLClass</id><coordinates><x>1530</x><y>290</y><w>240</w><h>110</h></coordinates><panel_attributes>&lt;&lt;interface&gt;&gt; EventObserver
++ dispatch(event): void</panel_attributes><additional_attributes /></element><element><id>UMLClass</id><coordinates><x>1530</x><y>290</y><w>240</w><h>110</h></coordinates><panel_attributes>&lt;&lt;abstract&gt;&gt; EventObserver
 --
-+ onEvent(event): void</panel_attributes><additional_attributes /></element><element><id>UMLClass</id><coordinates><x>1810</x><y>500</y><w>200</w><h>110</h></coordinates><panel_attributes>Event
++ virtual onEvent(event): void = 0</panel_attributes><additional_attributes /></element><element><id>UMLClass</id><coordinates><x>1810</x><y>500</y><w>200</w><h>110</h></coordinates><panel_attributes>Event
 --
 - type: EventType
 - payload: data</panel_attributes><additional_attributes /></element><element><id>UMLClass</id><coordinates><x>1810</x><y>60</y><w>260</w><h>150</h></coordinates><panel_attributes>&lt;&lt;abstract&gt;&gt; VisualComponent
@@ -135,22 +131,22 @@ m2=1
 r1=scenes</panel_attributes><additional_attributes>0;0;770;0</additional_attributes></element><element><id>Relation</id><coordinates><x>0</x><y>0</y><w>840</w><h>140</h></coordinates><panel_attributes>lt=-
 m1=1
 m2=0..*
-r1=manages</panel_attributes><additional_attributes>840;140;0;0</additional_attributes></element><element><id>Relation</id><coordinates><x>0</x><y>0</y><w>720</w><h>505</h></coordinates><panel_attributes>lt=&lt;&lt;-</panel_attributes><additional_attributes>720;505;0;0</additional_attributes></element><element><id>Relation</id><coordinates><x>0</x><y>0</y><w>940</w><h>505</h></coordinates><panel_attributes>lt=&lt;&lt;-</panel_attributes><additional_attributes>940;505;0;0</additional_attributes></element><element><id>Relation</id><coordinates><x>0</x><y>0</y><w>1260</w><h>140</h></coordinates><panel_attributes>lt=-
+r1=manages</panel_attributes><additional_attributes>840;140;0;0</additional_attributes></element><element><id>Relation</id><coordinates><x>0</x><y>0</y><w>720</w><h>505</h></coordinates><panel_attributes>lt=&lt;&lt;-</panel_attributes><additional_attributes>0;0;720;505</additional_attributes></element><element><id>Relation</id><coordinates><x>0</x><y>0</y><w>940</w><h>505</h></coordinates><panel_attributes>lt=&lt;&lt;-</panel_attributes><additional_attributes>0;0;940;505</additional_attributes></element><element><id>Relation</id><coordinates><x>1250</x><y>140</y><w>10</w><h>245</h></coordinates><panel_attributes>lt=-
 m1=1
 m2=0..*
-r1=stores</panel_attributes><additional_attributes>1260;140;0;0</additional_attributes></element><element><id>Relation</id><coordinates><x>0</x><y>0</y><w>10</w><h>10</h></coordinates><panel_attributes>lt=&lt;&lt;.</panel_attributes><additional_attributes>0;0;0;0</additional_attributes></element><element><id>Relation</id><coordinates><x>0</x><y>0</y><w>1000</w><h>790</h></coordinates><panel_attributes>lt=&lt;&lt;-</panel_attributes><additional_attributes>1000;790;0;0</additional_attributes></element><element><id>Relation</id><coordinates><x>0</x><y>0</y><w>1220</w><h>790</h></coordinates><panel_attributes>lt=&lt;&lt;-</panel_attributes><additional_attributes>1220;790;0;0</additional_attributes></element><element><id>Relation</id><coordinates><x>0</x><y>0</y><w>1440</w><h>790</h></coordinates><panel_attributes>lt=&lt;&lt;-</panel_attributes><additional_attributes>1440;790;0;0</additional_attributes></element><element><id>Relation</id><coordinates><x>0</x><y>0</y><w>1650</w><h>570</h></coordinates><panel_attributes>lt=-
+r1=stores</panel_attributes><additional_attributes>10;0;0;245</additional_attributes></element><element><id>Relation</id><coordinates><x>1000</x><y>385</y><w>250</w><h>405</h></coordinates><panel_attributes>lt=&lt;&lt;-</panel_attributes><additional_attributes>250;0;0;405</additional_attributes></element><element><id>Relation</id><coordinates><x>1220</x><y>385</y><w>30</w><h>405</h></coordinates><panel_attributes>lt=&lt;&lt;-</panel_attributes><additional_attributes>30;0;0;405</additional_attributes></element><element><id>Relation</id><coordinates><x>1250</x><y>385</y><w>190</w><h>405</h></coordinates><panel_attributes>lt=&lt;&lt;-</panel_attributes><additional_attributes>0;0;190;405</additional_attributes></element><element><id>Relation</id><coordinates><x>1250</x><y>385</y><w>400</w><h>185</h></coordinates><panel_attributes>lt=-
 m1=1
 m2=1
-r1=owns</panel_attributes><additional_attributes>0;0;1650;570</additional_attributes></element><element><id>Relation</id><coordinates><x>0</x><y>0</y><w>1650</w><h>570</h></coordinates><panel_attributes>lt=-
+r1=owns</panel_attributes><additional_attributes>0;0;400;185</additional_attributes></element><element><id>Relation</id><coordinates><x>1650</x><y>345</y><w>10</w><h>225</h></coordinates><panel_attributes>lt=-
 m1=1
 m2=0..*
-r1=notifies</panel_attributes><additional_attributes>1650;570;0;0</additional_attributes></element><element><id>Relation</id><coordinates><x>1650</x><y>555</y><w>260</w><h>15</h></coordinates><panel_attributes>lt=-
+r1=notifies</panel_attributes><additional_attributes>0;225;0;0</additional_attributes></element><element><id>Relation</id><coordinates><x>1650</x><y>555</y><w>260</w><h>15</h></coordinates><panel_attributes>lt=-
 m1=1
 m2=0..*
-r1=dispatches</panel_attributes><additional_attributes>0;15;260;0</additional_attributes></element><element><id>Relation</id><coordinates><x>0</x><y>0</y><w>10</w><h>10</h></coordinates><panel_attributes>lt=-
+r1=dispatches</panel_attributes><additional_attributes>0;15;260;0</additional_attributes></element><element><id>Relation</id><coordinates><x>0</x><y>0</y><w>1250</w><h>385</h></coordinates><panel_attributes>lt=-
 m1=1
 m2=0..*
-r1=contains</panel_attributes><additional_attributes>0;0;0;0</additional_attributes></element><element><id>Relation</id><coordinates><x>0</x><y>0</y><w>1660</w><h>320</h></coordinates><panel_attributes>lt=&lt;&lt;-</panel_attributes><additional_attributes>1660;320;0;0</additional_attributes></element><element><id>Relation</id><coordinates><x>0</x><y>0</y><w>1860</w><h>320</h></coordinates><panel_attributes>lt=&lt;&lt;-</panel_attributes><additional_attributes>1860;320;0;0</additional_attributes></element><element><id>Relation</id><coordinates><x>0</x><y>0</y><w>2060</w><h>320</h></coordinates><panel_attributes>lt=&lt;&lt;-</panel_attributes><additional_attributes>2060;320;0;0</additional_attributes></element><element><id>Relation</id><coordinates><x>490</x><y>345</y><w>1670</w><h>220</h></coordinates><panel_attributes>lt=-
+r1=contains</panel_attributes><additional_attributes>1250;385;0;0</additional_attributes></element><element><id>Relation</id><coordinates><x>0</x><y>0</y><w>1660</w><h>320</h></coordinates><panel_attributes>lt=&lt;&lt;-</panel_attributes><additional_attributes>0;0;1660;320</additional_attributes></element><element><id>Relation</id><coordinates><x>0</x><y>0</y><w>1860</w><h>320</h></coordinates><panel_attributes>lt=&lt;&lt;-</panel_attributes><additional_attributes>0;0;1860;320</additional_attributes></element><element><id>Relation</id><coordinates><x>0</x><y>0</y><w>2060</w><h>320</h></coordinates><panel_attributes>lt=&lt;&lt;-</panel_attributes><additional_attributes>0;0;2060;320</additional_attributes></element><element><id>Relation</id><coordinates><x>490</x><y>345</y><w>1670</w><h>220</h></coordinates><panel_attributes>lt=-
 m1=1
 m2=1
 r1=uses</panel_attributes><additional_attributes>0;0;1670;220</additional_attributes></element><element><id>Relation</id><coordinates><x>2160</x><y>565</y><w>10</w><h>185</h></coordinates><panel_attributes>lt=-
