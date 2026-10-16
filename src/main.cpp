@@ -2,6 +2,7 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
 #include "moteur/Bibliotheques.h"
+#include "moteur/CheckBox.h"
 #include "moteur/Engine.h"
 #include "moteur/Font.h"
 #include "moteur/Label.h"
@@ -171,6 +172,7 @@ bool demonstrate(moteur::Engine& engine, bool smoke) {
       : std::shared_ptr<moteur::Font>{}, "TP1 - Controle Etiquette");
   label.setPosition({18.0f, 18.0f});
   label.setColor({1.0f, 1.0f, 1.0f, 1.0f});
+  moteur::CheckBox checkBox;
   const char* basePath = SDL_GetBasePath();
   if (!basePath) { std::cerr << SDL_GetError() << '\n'; return false; }
   const std::filesystem::path shaders = std::filesystem::path(basePath) / "assets" / "shaders";
@@ -180,6 +182,14 @@ bool demonstrate(moteur::Engine& engine, bool smoke) {
   }
   if (!program.link({&vertex, &fragment}) || !vao.create() || !vbo.create()) {
     std::cerr << program.getError() << '\n'; return false;
+  }
+  checkBox.setPosition(24.0f, 24.0f);
+  checkBox.setSize(36.0f);
+  checkBox.setBorderColor({0.08f, 0.10f, 0.14f, 1.0f});
+  checkBox.setBackgroundColor({0.95f, 0.95f, 0.95f, 1.0f});
+  checkBox.setCheckColor({0.10f, 0.70f, 0.28f, 1.0f});
+  if (!checkBox.initialize()) {
+    std::cerr << checkBox.getError() << '\n'; return false;
   }
   // Les trois sommets sont stockés dans le VBO; le VAO mémorise leur attribut.
   constexpr std::array<GLfloat, 6> triangle{
@@ -239,9 +249,15 @@ bool demonstrate(moteur::Engine& engine, bool smoke) {
       if (glGetError() != GL_NO_ERROR) valid = false;
     }
     moteur::VAO::unbind(); moteur::Program::unuse();
+    int windowWidth = 0, windowHeight = 0;
+    if (SDL_GetWindowSize(engine.getWindow().getSDLWindow(), &windowWidth, &windowHeight)) {
+      checkBox.render(static_cast<float>(windowWidth), static_cast<float>(windowHeight));
+    }
     ++frames;
   }, [&](const SDL_Event& event) {
     if (event.type == SDL_EVENT_KEY_DOWN && event.key.key == SDLK_ESCAPE) engine.stop();
+    if (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN &&
+        event.button.windowID == engine.getWindow().getId()) checkBox.handleEvent(event);
   });
   if (!ran) std::cerr << engine.getError() << '\n';
   return ran && valid && (!smoke || frames == 3);
