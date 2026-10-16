@@ -1,5 +1,13 @@
 # TP1_JeuVideo
 
+## 📦 Atelier 2 — téléchargement
+
+**[⬇ Télécharger Atelier2JV.zip (175 Mo)](https://github.com/Edkabe/TP1_JeuVideo/releases/download/atelier2-reference/Atelier2JV.zip)**
+
+Archive originale de l'atelier réalisé en cours, fournie comme référence distincte du projet. Connectez-vous à GitHub avec un compte ayant accès à ce dépôt privé pour la télécharger.
+
+---
+
 Projet de moteur graphique mono fenêtre et de contrôles visuels.
 
 Équipe : Edkabe et oceane-talla.
