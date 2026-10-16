@@ -1,4 +1,4 @@
-param([switch]$Verifier, [switch]$TesterRessources, [switch]$TesterMathematiques)
+param([switch]$Verifier, [switch]$TesterRessources, [switch]$TesterMathematiques, [switch]$TesterEtiquette)
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
 Set-Location -LiteralPath $projectRoot
@@ -121,4 +121,9 @@ if ($TesterMathematiques) {
     if ($LASTEXITCODE -ne 0) { throw 'Compilation des tests mathématiques échouée.' }
     & $mathExecutable
     if ($LASTEXITCODE -ne 0) { throw 'Tests mathématiques échoués.' }
+}
+
+if ($TesterEtiquette) {
+    & $executable --label-check
+    if ($LASTEXITCODE -ne 0) { throw 'Verification du controle Etiquette echouee.' }
 }

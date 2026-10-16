@@ -8,6 +8,12 @@ void Font::release() {
     loaded = false;
 }
 int Font::getHeight() const { return handle ? TTF_GetFontHeight(handle) : 0; }
+bool Font::measureText(const std::string& text, int& width, int& height) const {
+    width = 0;
+    height = 0;
+    if (!handle) return false;
+    return TTF_GetStringSize(handle, text.c_str(), text.size(), &width, &height);
+}
 bool Font::load(const std::string& path) {
     error.clear();
     if (!std::isfinite(pointSize) || pointSize <= 0) { error = "Taille de police invalide."; return false; }
