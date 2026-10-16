@@ -1,21 +1,15 @@
 {
   "configurations": [
     {
-      "program": "${workspaceFolder}/out/windows/Debug/program.exe",
+      "environment": [],
+      "cwd": "${workspaceFolder}/build",
       "type": "cppvsdbg",
+      "request": "launch",
       "name": "(Windows) Exécuter",
-      "preLaunchTask": "Compiler (incremental)",
-      "cwd": "${workspaceFolder}/out/windows/Debug",
-      "request": "launch"
-    },
-    {
-      "MIMode": "lldb",
-      "program": "${workspaceFolder}/out/macos/program",
-      "type": "cppdbg",
-      "name": "(macOS) Exécuter",
-      "preLaunchTask": "Compiler (incremental)",
-      "cwd": "${workspaceFolder}/out/macos",
-      "request": "launch"
+      "stopAtEntry": false,
+      "preLaunchTask": "(Windows) Compiler",
+      "program": "${workspaceFolder}/build/program.exe",
+      "args": []
     }
   ],
   "version": "0.2.0"

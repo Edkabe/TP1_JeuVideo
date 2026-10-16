@@ -1,80 +1,49 @@
-# Bibliothèque du moteur et compilation incrémentale
+# Compilation Windows — environnement du cours
 
-Le moteur est une bibliothèque statique (`moteur.lib` sous Windows,
-`libmoteur.a` sous macOS). L'application `program` la lie à la compilation.
-Les futurs fichiers du moteur vont dans `src/moteur/`, leurs en-têtes publics
-dans `include/moteur/`. Ajouter chaque nouveau `.cpp` à la cible `moteur`
-dans `CMakeLists.txt`. Le `main.cpp` reste dans la cible de l'application.
+Cette configuration reprend les outils Windows de `VSCOGL (1).zip` :
+VS Code, MSVC x64 (`cl.exe`), SDK Windows, bibliothèques et DLL dans `build/`.
+Elle n'utilise plus CMake, vcpkg ou Ninja.
 
-SDL3, SDL3_image, SDL3_ttf et GLAD sont déjà compilées dans `build/lib/`.
-GLM 1.0.1 est fourni dans `external/glm/`, avec sa licence : cette bibliothèque
-d'en-têtes n'a pas de binaire séparé.
+Installer VS Code, l'extension Microsoft C/C++, puis Visual Studio ou ses
+Build Tools avec la charge « Développement Desktop en C++ » et un SDK Windows.
+Ouvrir le dossier contenant `.vscode`, `src`, `include` et `build`.
 
-## Utilisation depuis VS Code
+- **Ctrl+Maj+B** : tâche `(Windows) Compiler`.
+- **F5** : tâche de compilation suivie du débogage de `build/program.exe`.
+- Palette **Tasks: Run Task → (Windows) Vérifier** : compilation puis test
+  de liaison des dépendances, sans fenêtre.
 
-Installer CMake 3.24 ou plus récent, les extensions recommandées et le
-compilateur C++. Sous Windows, ce preset utilise les Build Tools
-**Visual Studio 2026 x64**, comme ceux installés sur le poste d'Edkabe.
-L'éditeur reste VS Code. Le générateur Visual Studio 2026 nécessite CMake 4.2
-ou plus récent. Pour Visual Studio 2022, utiliser CMake 3.24 ou plus récent et
-le générateur `Visual Studio 17 2022` dans un `CMakeUserPresets.json` local.
-Ne pas partager un dossier de sortie entre deux générateurs différents.
-
-Avec CMake dans le PATH, **Ctrl+Maj+B** configure puis compile ce qui a changé.
-**F5** compile de la même façon puis lance l'application.
-La configuration CMake répétée ne force pas la recompilation des sources.
-
-Sur le poste d'Edkabe, CMake est déjà livré avec Visual Studio. Si `cmake`
-n'est pas reconnu dans le terminal VS Code, ajouter ce dossier au PATH du
-terminal (ou lancer VS Code depuis un terminal où CMake est accessible) :
-`C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin`.
-
-Exemple de `CMakeUserPresets.json` pour un poste Visual Studio 2022 :
-
-```json
-{
-  "version": 5,
-  "configurePresets": [
-    { "name": "windows2022", "inherits": "windows", "generator": "Visual Studio 17 2022", "binaryDir": "${sourceDir}/out/windows2022" }
-  ]
-}
-```
-
-Configurer avec `cmake --preset windows2022`, puis compiler avec
-`cmake --build out/windows2022 --config Debug`. Sur ce poste, adapter les
-tâches et le chemin de débogage VS Code au preset/dossier `windows2022`.
+Les tâches appellent `scripts/compiler-windows.ps1`. Ce script initialise
+le terminal développeur x64 si nécessaire, compile les `.cpp` avec `cl.exe`,
+archive le moteur avec `lib.exe` et lie l'application avec `link.exe`.
 
 ```powershell
-cmake --preset windows
-cmake --build --preset windows-debug
-ctest --preset windows-debug
+powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/compiler-windows.ps1
+./build/program.exe
+./build/program.exe --check
+./build/program.exe --smoke
 ```
 
-Sous macOS : installer CMake et les outils de compilation Xcode, ainsi que
-`sdl3`, `sdl3_image` et `sdl3_ttf` avec Homebrew. Utiliser les presets `macos`
-et `macos-debug`. Le binaire `build/lib/libglad.a` fourni doit correspondre
-à l'architecture du Mac. Ce chemin doit être validé sur le second poste.
+## Fichiers produits
 
-## Ce qui est recompilé
-
-| Modification | Travail attendu |
+| Chemin | Contenu |
 | --- | --- |
-| Aucun fichier modifié | Aucune compilation ou liaison |
-| Seulement `src/main.cpp` | Objet du main et liaison de l'application |
-| Un `.cpp` du moteur | Cet objet, archive moteur et liaison de l'application |
-| Un en-tête inclus | Les fichiers qui incluent cet en-tête, puis liaison |
+| `build/obj/moteur/` | Objets compilés du moteur et dépendances aux en-têtes |
+| `build/lib/moteur.lib` | Votre bibliothèque statique |
+| `build/program.exe` | Application |
+| `build/assets/shaders/` | Copie des nuanceurs de la démonstration |
 
-Si le code de la bibliothèque change, il faut la reconstruire. Ne pas
-supprimer `out/` et ne pas utiliser `--clean-first` à chaque lancement.
-Les résultats sous `out/` ne sont pas versionnés.
+Les dépendances SDL3, SDL3_image, SDL3_ttf et GLAD fournies par le cours
+restent dans `build/lib/`; leurs DLL restent dans `build/`. GLM est dans
+`external/glm/` et ne nécessite pas de `.lib`.
 
-`verifierBibliotheques()` est uniquement une démonstration de liaison, pas
-l'implémentation du moteur du sprint 2. Le test ne valide pas la création
-d'un contexte OpenGL, le décodage d'images ni le rendu de texte.
+Le script mémorise les options et les en-têtes utilisés par chaque `.cpp`
+avec `/sourceDependencies`. Sans changement, il ne recompile rien.
+Un changement du main recompile le main puis relie l'application; un
+changement du moteur reconstruit les objets concernés puis `moteur.lib`.
+Un changement d'en-tête recompile les sources qui l'incluent.
 
-## Validation sur Windows
-
-Configuration, compilation et test de liaison réussis avec MSVC x64.
-Une seconde compilation sans changement conserve les dates de `moteur.lib`
-et `program.exe`. Après changement de date du seul `main.cpp`, l'application
-est reconstruite et `moteur.lib` reste inchangée. macOS reste à valider.
+Les anciens fichiers sous `out/` ne sont plus utilisés. Ne pas les confondre
+avec les nouvelles sorties dans `build/`. Les sorties compilées sont ignorées
+par Git. Cette configuration cible Windows, conformément à l'environnement
+demandé; le précédent lancement macOS n'est pas utilisé.
