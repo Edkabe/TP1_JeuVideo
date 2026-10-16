@@ -1,4 +1,4 @@
-﻿param([switch]$Verifier)
+﻿param([switch]$Verifier, [switch]$TesterRessources)
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
 Set-Location -LiteralPath $projectRoot
@@ -97,4 +97,18 @@ Get-ChildItem -LiteralPath (Join-Path $projectRoot 'assets/shaders') -File | For
 if ($Verifier) {
     & $executable --check
     if ($LASTEXITCODE -ne 0) { throw 'Test des dépendances échoué.' }
+}
+if ($TesterRessources) {
+    $testObject = Join-Path $objects 'ResourceTests.obj'
+    $testChanged = Compile-Source (Join-Path $projectRoot 'tests/ResourceTests.cpp') $testObject
+    $testExecutable = Join-Path $output 'resource-tests.exe'
+    if ($testChanged -or $archiveChanged -or $linkChanged -or -not (Test-Path -LiteralPath $testExecutable)) {
+        & link.exe /nologo /debug /machine:x64 /subsystem:console "/OUT:$testExecutable" $testObject $library "/LIBPATH:$output/lib" gl.lib SDL3.lib SDL3_image.lib SDL3_ttf.lib opengl32.lib
+        if ($LASTEXITCODE -ne 0) { throw 'Liaison des tests de ressources echouee.' }
+    }
+    $testAssets = Join-Path $output 'assets/tests'
+    New-Item -ItemType Directory -Path $testAssets -Force | Out-Null
+    Copy-Item -LiteralPath (Join-Path $projectRoot 'tests/assets/pixels.png') -Destination $testAssets -Force
+    & $testExecutable
+    if ($LASTEXITCODE -ne 0) { throw 'Tests de ressources echoues.' }
 }

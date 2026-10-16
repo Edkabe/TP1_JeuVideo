@@ -50,16 +50,17 @@ bool Engine::run(const std::function<void(float)>& update, const std::function<v
 
 bool Engine::run(Scene& scene, const std::function<void(float)>& update,
                  const std::function<void()>& render) {
-    // L'Engine récupère les événements SDL; la scène active les distribue à ses observateurs.
     return run(update, render, [&scene](const SDL_Event& sdlEvent) {
         const Event event(sdlEvent);
         scene.dispatchEvent(event);
     });
 }
-
 bool Engine::shutdown() {
     if (running) { error = "Arreter la boucle avant de fermer le moteur."; return false; }
     // Les objets graphiques clients doivent être libérés AVANT cet appel.
+    // Vider le gestionnaire tant que le contexte est encore actif.
+    if (initialized && !window.makeCurrent()) { error = SDL_GetError(); return false; }
+    resources.clear();
     window.close();
     if (initialized) SDL_QuitSubSystem(SDL_INIT_VIDEO);
     initialized = false;
