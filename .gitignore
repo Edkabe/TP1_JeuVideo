@@ -1,0 +1,5 @@
+/out/
+/external/glm-source/
+/CMakeUserPresets.json
+/.vs/
+*.user
