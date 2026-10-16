@@ -1,4 +1,4 @@
-﻿param([switch]$Verifier, [switch]$TesterRessources)
+param([switch]$Verifier, [switch]$TesterRessources, [switch]$TesterMathematiques)
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
 Set-Location -LiteralPath $projectRoot
@@ -111,4 +111,14 @@ if ($TesterRessources) {
     Copy-Item -LiteralPath (Join-Path $projectRoot 'tests/assets/pixels.png') -Destination $testAssets -Force
     & $testExecutable
     if ($LASTEXITCODE -ne 0) { throw 'Tests de ressources echoues.' }
+}
+
+if ($TesterMathematiques) {
+    $mathExecutable = Join-Path $output 'math-tests.exe'
+    $mathSource = Join-Path $projectRoot 'tests/MathTests.cpp'
+    Write-Host 'Compilation : MathTests.cpp'
+    & cl.exe @options $mathSource "/Fe$mathExecutable" "/Fo$objects/MathTests.obj" /link /nologo
+    if ($LASTEXITCODE -ne 0) { throw 'Compilation des tests mathématiques échouée.' }
+    & $mathExecutable
+    if ($LASTEXITCODE -ne 0) { throw 'Tests mathématiques échoués.' }
 }
