@@ -24,6 +24,13 @@ powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/compiler-windows.p
 ./build/program.exe --smoke
 ```
 
+Pour vérifier la sauvegarde et le rechargement des paramètres dans une
+nouvelle instance (sans ouvrir de fenêtre) :
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/compiler-windows.ps1 -TesterParametres
+```
+
 ## Fichiers produits
 
 | Chemin | Contenu |

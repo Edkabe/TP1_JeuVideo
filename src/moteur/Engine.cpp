@@ -52,6 +52,7 @@ bool Engine::shutdown() {
     // Vider le gestionnaire tant que le contexte est encore actif.
     if (initialized && !window.makeCurrent()) { error = SDL_GetError(); return false; }
     resources.clear();
+    if (!settings.save()) { error = settings.getError(); return false; }
     window.close();
     if (initialized) SDL_QuitSubSystem(SDL_INIT_VIDEO);
     initialized = false;
