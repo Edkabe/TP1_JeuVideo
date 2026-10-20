@@ -1,4 +1,4 @@
-﻿param([switch]$Verifier, [switch]$TesterRessources)
+﻿param([switch]$Verifier, [switch]$TesterRessources, [switch]$TesterParametres)
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
 Set-Location -LiteralPath $projectRoot
@@ -111,4 +111,17 @@ if ($TesterRessources) {
     Copy-Item -LiteralPath (Join-Path $projectRoot 'tests/assets/pixels.png') -Destination $testAssets -Force
     & $testExecutable
     if ($LASTEXITCODE -ne 0) { throw 'Tests de ressources echoues.' }
+}
+if ($TesterParametres) {
+    $testObject = Join-Path $objects 'SettingsTests.obj'
+    $testSource = Join-Path $projectRoot 'tests/SettingsTests.cpp'
+    $testChanged = Compile-Source $testSource $testObject
+    $settingsObject = Join-Path $objects 'moteur/Settings.obj'
+    $testExecutable = Join-Path $output 'settings-tests.exe'
+    if ($testChanged -or $archiveChanged -or -not (Test-Path -LiteralPath $testExecutable)) {
+        & link.exe /nologo /debug /machine:x64 /subsystem:console "/OUT:$testExecutable" $testObject $settingsObject
+        if ($LASTEXITCODE -ne 0) { throw 'Liaison des tests de paramètres échouée.' }
+    }
+    & $testExecutable
+    if ($LASTEXITCODE -ne 0) { throw 'Tests des paramètres échoués.' }
 }
