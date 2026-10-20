@@ -1,4 +1,5 @@
 #include "moteur/Engine.h"
+#include "moteur/Scene.h"
 #include <chrono>
 
 namespace moteur {
@@ -45,6 +46,14 @@ bool Engine::run(const std::function<void(float)>& update, const std::function<v
         SDL_Delay(1);
     }
     return true;
+}
+
+bool Engine::run(Scene& scene, const std::function<void(float)>& update,
+                 const std::function<void()>& render) {
+    return run(update, render, [&scene](const SDL_Event& sdlEvent) {
+        const Event event(sdlEvent);
+        scene.dispatchEvent(event);
+    });
 }
 bool Engine::shutdown() {
     if (running) { error = "Arreter la boucle avant de fermer le moteur."; return false; }
