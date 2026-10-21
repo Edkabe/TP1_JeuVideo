@@ -1,6 +1,7 @@
 #pragma once
 #include "moteur/Window.h"
 #include "moteur/ResourceManager.h"
+#include "moteur/Settings.h"
 #include <functional>
 
 namespace moteur {
@@ -25,12 +26,16 @@ public:
     bool isRunning() const { return running; }
     Window& getWindow() { return window; }
     ResourceManager& getResourceManager() { return resources; }
+    Settings& getSettings() { return settings; }
+    const Settings& getSettings() const { return settings; }
     const std::string& getError() const { return error; }
 private:
     Engine() = default;
     ~Engine();
     Window window;
     ResourceManager resources;
+    // Chargés à la première création du moteur et accessibles aux scènes.
+    Settings settings;
     bool initialized = false;
     bool running = false;
     std::string error;

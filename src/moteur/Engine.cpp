@@ -56,13 +56,13 @@ bool Engine::run(Scene& scene, const std::function<void(float)>& update,
         scene.dispatchEvent(event);
     });
 }
-
 bool Engine::shutdown() {
     if (running) { error = "Arreter la boucle avant de fermer le moteur."; return false; }
     // Les objets graphiques clients doivent être libérés AVANT cet appel.
     // Vider le gestionnaire tant que le contexte est encore actif.
     if (initialized && !window.makeCurrent()) { error = SDL_GetError(); return false; }
     resources.clear();
+    if (!settings.save()) { error = settings.getError(); return false; }
     window.close();
     if (initialized) SDL_QuitSubSystem(SDL_INIT_VIDEO);
     initialized = false;

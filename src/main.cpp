@@ -7,9 +7,68 @@
 #include "moteur/VertexShader.h"
 #include "moteur/Program.h"
 #include "moteur/VAO.h"
+#include "moteur/VBO.h"
+#include <array>
 #include <filesystem>
 #include <iostream>
 #include <string_view>
+#include <type_traits>
+#include <utility>
+
+namespace {
+// Vérifie le transfert et la libération sous un contexte OpenGL actif.
+bool verifyBufferLifetime() {
+  static_assert(!std::is_copy_constructible_v<moteur::VBO>);
+  static_assert(!std::is_copy_assignable_v<moteur::VBO>);
+  static_assert(!std::is_copy_constructible_v<moteur::VAO>);
+  static_assert(!std::is_copy_assignable_v<moteur::VAO>);
+
+  moteur::VBO source;
+  if (!source.create()) return false;
+  const GLuint sourceId = source.getId();
+  source.bind();
+  const bool sourceIsBuffer = glIsBuffer(sourceId) == GL_TRUE;
+  moteur::VBO::unbind();
+
+  moteur::VBO moved(std::move(source));
+  bool valid = sourceIsBuffer && source.getId() == 0 && moved.getId() == sourceId;
+
+  moteur::VBO destination;
+  valid = valid && destination.create();
+  const GLuint replacedId = destination.getId();
+  destination.bind();
+  const bool destinationIsBuffer = glIsBuffer(replacedId) == GL_TRUE;
+  moteur::VBO::unbind();
+  destination = std::move(moved);
+  valid = valid && destinationIsBuffer && moved.getId() == 0 &&
+      destination.getId() == sourceId && glIsBuffer(replacedId) == GL_FALSE;
+  destination.release();
+  destination.release();
+  valid = valid && destination.getId() == 0 && glIsBuffer(sourceId) == GL_FALSE;
+
+  moteur::VAO vaoSource;
+  valid = valid && vaoSource.create();
+  const GLuint vaoId = vaoSource.getId();
+  vaoSource.bind();
+  const bool sourceIsVertexArray = glIsVertexArray(vaoId) == GL_TRUE;
+  moteur::VAO::unbind();
+  moteur::VAO vaoMoved(std::move(vaoSource));
+  valid = valid && sourceIsVertexArray && vaoSource.getId() == 0 && vaoMoved.getId() == vaoId;
+  moteur::VAO vaoDestination;
+  valid = valid && vaoDestination.create();
+  const GLuint replacedVaoId = vaoDestination.getId();
+  vaoDestination.bind();
+  const bool destinationIsVertexArray = glIsVertexArray(replacedVaoId) == GL_TRUE;
+  moteur::VAO::unbind();
+  vaoDestination = std::move(vaoMoved);
+  valid = valid && destinationIsVertexArray && vaoMoved.getId() == 0 &&
+      vaoDestination.getId() == vaoId && glIsVertexArray(replacedVaoId) == GL_FALSE;
+  vaoDestination.release();
+  vaoDestination.release();
+  valid = valid && vaoDestination.getId() == 0 && glIsVertexArray(vaoId) == GL_FALSE;
+  return valid && glGetError() == GL_NO_ERROR;
+}
+}
 
 namespace {
 bool demonstrate(moteur::Engine& engine, bool smoke) {
@@ -19,6 +78,7 @@ bool demonstrate(moteur::Engine& engine, bool smoke) {
   moteur::Program program;
   moteur::VAO vao;
   moteur::CheckBox checkBox;
+  moteur::VBO vbo;
   const char* basePath = SDL_GetBasePath();
   if (!basePath) { std::cerr << SDL_GetError() << '\n'; return false; }
   const std::filesystem::path shaders = std::filesystem::path(basePath) / "assets" / "shaders";
@@ -26,7 +86,7 @@ bool demonstrate(moteur::Engine& engine, bool smoke) {
       !fragment.loadShader((shaders / "triangle.frag").string())) {
     std::cerr << vertex.getError() << fragment.getError() << '\n'; return false;
   }
-  if (!program.link({&vertex, &fragment}) || !vao.create()) {
+  if (!program.link({&vertex, &fragment}) || !vao.create() || !vbo.create()) {
     std::cerr << program.getError() << '\n'; return false;
   }
   checkBox.setPosition(24.0f, 24.0f);
@@ -37,8 +97,22 @@ bool demonstrate(moteur::Engine& engine, bool smoke) {
   if (!checkBox.initialize()) {
     std::cerr << checkBox.getError() << '\n'; return false;
   }
+  // Les trois sommets sont stockés dans le VBO; le VAO mémorise leur attribut.
+  constexpr std::array<GLfloat, 6> triangle{
+      -0.65f, -0.55f, 0.65f, -0.55f, 0.0f, 0.65f};
+  vbo.setData(triangle.data(), static_cast<GLsizeiptr>(sizeof(triangle)), GL_STATIC_DRAW);
+  vao.setAttribute(0, 2, GL_FLOAT, GL_FALSE,
+                   static_cast<GLsizei>(2 * sizeof(GLfloat)), 0);
+  moteur::VAO::unbind();
+  moteur::VBO::unbind();
   bool valid = true;
   if (smoke) {
+    GLint capturedBuffer = 0;
+    vao.bind();
+    glGetVertexAttribiv(0, GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING, &capturedBuffer);
+    moteur::VAO::unbind();
+    valid = capturedBuffer == static_cast<GLint>(vbo.getId()) && verifyBufferLifetime();
+    if (!valid) { std::cerr << "Echec des controles VBO/VAO.\n"; return false; }
     const GLuint previousShader = vertex.getId();
     valid = !vertex.compile("#version 330 core\nceci est invalide") &&
         !vertex.getError().empty() && vertex.getId() == previousShader;
