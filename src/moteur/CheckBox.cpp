@@ -57,9 +57,9 @@ bool CheckBox::initialize() {
 
 void CheckBox::addTriangle(float ax, float ay, float bx, float by, float cx, float cy,
                            Color color, std::array<Vertex, 42>& vertices, std::size_t& count) const {
-    vertices[count++] = {ax, ay, color.red, color.green, color.blue, color.alpha};
-    vertices[count++] = {bx, by, color.red, color.green, color.blue, color.alpha};
-    vertices[count++] = {cx, cy, color.red, color.green, color.blue, color.alpha};
+    vertices[count++] = {ax, ay, color.r, color.g, color.b, color.a};
+    vertices[count++] = {bx, by, color.r, color.g, color.b, color.a};
+    vertices[count++] = {cx, cy, color.r, color.g, color.b, color.a};
 }
 
 void CheckBox::addRectangle(float x, float y, float width, float height, Color color,

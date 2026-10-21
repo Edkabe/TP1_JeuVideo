@@ -1,4 +1,5 @@
-﻿param([switch]$Verifier, [switch]$TesterRessources, [switch]$TesterParametres)
+param([switch]$Verifier, [switch]$TesterRessources, [switch]$TesterParametres,
+    [switch]$TesterMathematiques, [switch]$TesterEtiquette)
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
 Set-Location -LiteralPath $projectRoot
@@ -124,4 +125,19 @@ if ($TesterParametres) {
     }
     & $testExecutable
     if ($LASTEXITCODE -ne 0) { throw 'Tests des paramètres échoués.' }
+}
+
+if ($TesterMathematiques) {
+    $mathExecutable = Join-Path $output 'math-tests.exe'
+    $mathSource = Join-Path $projectRoot 'tests/MathTests.cpp'
+    Write-Host 'Compilation : MathTests.cpp'
+    & cl.exe @options $mathSource "/Fe$mathExecutable" "/Fo$objects/MathTests.obj" /link /nologo
+    if ($LASTEXITCODE -ne 0) { throw 'Compilation des tests mathématiques échouée.' }
+    & $mathExecutable
+    if ($LASTEXITCODE -ne 0) { throw 'Tests mathématiques échoués.' }
+}
+
+if ($TesterEtiquette) {
+    & $executable --label-check
+    if ($LASTEXITCODE -ne 0) { throw 'Verification du controle Etiquette echouee.' }
 }

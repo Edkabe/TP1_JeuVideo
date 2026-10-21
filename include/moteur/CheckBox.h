@@ -1,5 +1,6 @@
 #pragma once
 
+#include "moteur/Color.h"
 #include "moteur/Program.h"
 #include "moteur/VAO.h"
 #include "moteur/VBO.h"
@@ -10,13 +11,6 @@
 #include <string>
 
 namespace moteur {
-
-struct Color {
-    float red;
-    float green;
-    float blue;
-    float alpha;
-};
 
 // Case carrée dessinée en pixels, depuis le coin supérieur gauche de la fenêtre.
 class CheckBox {
