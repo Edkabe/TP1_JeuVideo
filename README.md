@@ -23,3 +23,8 @@ Atelier2JV.zip est un atelier distinct du projet. Son archive originale est dest
 Voir [le guide de compilation incrémentale](doc/Bibliotheques.md).
 Le moteur se compile dans une bibliothèque statique indépendante du `main`.
 Les dépendances déjà fournies sont réutilisées, sans vcpkg.
+
+## Menu principal
+
+Apres compilation, lancer `build/program.exe` pour ouvrir le menu, la demonstration provisoire ou les credits. Le bouton Parametres attend encore la scene d'Oceane.
+Voir [les commandes et le fonctionnement](doc/MenuPrincipal.md). Le triangle reste accessible avec `--triangle` et son test avec `--smoke`.

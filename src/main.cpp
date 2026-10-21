@@ -6,6 +6,9 @@
 #include "moteur/VertexShader.h"
 #include "moteur/Program.h"
 #include "moteur/VAO.h"
+#include "moteur/MainScene.h"
+#include "moteur/CreditsScene.h"
+#include "moteur/DemoGameScene.h"
 #include "moteur/VBO.h"
 #include <array>
 #include <filesystem>
@@ -15,6 +18,28 @@
 #include <utility>
 
 namespace {
+bool showMenu(moteur::Engine& engine) {
+  const char* base = SDL_GetBasePath();
+  const char* windows = SDL_getenv("WINDIR");
+  if (!windows) windows = SDL_getenv("SystemRoot");
+  if (!base || !windows) { std::cerr << "Dossier des ressources ou de Windows indisponible.\n"; return false; }
+  const auto font = std::filesystem::path(windows) / "Fonts/arial.ttf";
+  moteur::SceneManager scenes;
+  auto menu = std::make_unique<moteur::MainScene>(scenes,font,
+      std::filesystem::path(base) / "assets/images/menu-background.svg",
+      moteur::MainScene::Targets{"demonstration", "", "credits"});
+  auto* menuPointer = menu.get();
+  if (!scenes.addScene("menu",std::move(menu))) { std::cerr << scenes.getError() << '\n'; return false; }
+  if (!scenes.addScene("credits",std::make_unique<moteur::CreditsScene>(scenes,font,"menu")) ||
+      !scenes.addScene("demonstration",std::make_unique<moteur::DemoGameScene>(scenes,font,"menu")) ||
+      !scenes.setActiveScene("menu")) {
+    std::cerr << scenes.getError() << " " << menuPointer->getError() << '\n'; return false;
+  }
+  const bool ran = engine.run(scenes);
+  scenes.clear();
+  return ran;
+}
+
 // Vérifie le transfert et la libération sous un contexte OpenGL actif.
 bool verifyBufferLifetime() {
   static_assert(!std::is_copy_constructible_v<moteur::VBO>);
@@ -159,12 +184,15 @@ int main(int argc, char* argv[]) {
   const std::string_view mode = argc > 1 ? argv[1] : "";
   if (mode == "--check") return moteur::verifierBibliotheques() ? 0 : 1;
   const bool smoke = mode == "--smoke";
+  const bool triangle = smoke || mode == "--triangle";
   auto& engine = moteur::Engine::getInstance();
-  if (!engine.initialize("TP1 - Moteur : triangle", 960, 540, smoke)) {
+  if (!engine.initialize(triangle ? "TP1 - Moteur : triangle" : "TP1 - Menu principal", 960, 540, smoke)) {
     std::cerr << engine.getError() << '\n'; return 1;
   }
-  const bool success = demonstrate(engine, smoke);
-  engine.shutdown();
+  bool success = false;
+  try { success = triangle ? demonstrate(engine, smoke) : showMenu(engine); }
+  catch (const std::exception& error) { std::cerr << error.what() << '\n'; }
+  if (!engine.shutdown()) { std::cerr << engine.getError() << '\n'; success = false; }
   if (smoke && success) std::cout << "Test graphique reussi : rendu, erreurs et boucle verifies.\n";
   return success ? 0 : 1;
 }
