@@ -27,3 +27,13 @@ boucle réentrante et le rendu du triangle par lecture d'un pixel.
 
 Les paramètres, scènes, gestionnaires, contrôles et programmes binaires
 restent des étapes ultérieures. Voir [la compilation Windows](Bibliotheques.md).
+
+## Diagramme de classes
+
+Le diagramme distingue en bleu les classes déjà présentes dans la version
+d'Eddy et en vert les classes proposées pour compléter le TP. Le SVG est la
+version vectorielle éditable; le PNG sert d'aperçu.
+
+[Ouvrir le diagramme éditable](Classes.svg) · [Ouvrir l'aperçu PNG](Classes.png)
+
+L'ancien diagramme UMLet a été conservé sous le nom [Classes-initiale.uxf](Classes-initiale.uxf).
