@@ -1,5 +1,6 @@
 #include "moteur/Engine.h"
 #include "moteur/Scene.h"
+#include "moteur/SceneManager.h"
 #include <chrono>
 
 namespace moteur {
@@ -56,6 +57,18 @@ bool Engine::run(Scene& scene, const std::function<void(float)>& update,
         scene.dispatchEvent(event);
     });
 }
+bool Engine::run(SceneManager& scenes) {
+    // La boucle consulte le gestionnaire à chaque étape: une transition
+    // demandée pendant update prend effet dès le rendu suivant.
+    return run(
+        [&scenes](float deltaTime) { scenes.update(deltaTime); },
+        [&scenes] { scenes.render(); },
+        [&scenes](const SDL_Event& sdlEvent) {
+            const Event event(sdlEvent);
+            scenes.dispatchEvent(event);
+        });
+}
+
 bool Engine::shutdown() {
     if (running) { error = "Arreter la boucle avant de fermer le moteur."; return false; }
     // Les objets graphiques clients doivent être libérés AVANT cet appel.

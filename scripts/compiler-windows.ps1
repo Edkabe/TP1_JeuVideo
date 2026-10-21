@@ -1,5 +1,5 @@
 param([switch]$Verifier, [switch]$TesterRessources, [switch]$TesterParametres,
-    [switch]$TesterMathematiques, [switch]$TesterEtiquette)
+    [switch]$TesterMathematiques, [switch]$TesterEtiquette, [switch]$TesterScenes)
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
 Set-Location -LiteralPath $projectRoot
@@ -140,4 +140,17 @@ if ($TesterMathematiques) {
 if ($TesterEtiquette) {
     & $executable --label-check
     if ($LASTEXITCODE -ne 0) { throw 'Verification du controle Etiquette echouee.' }
+}
+
+if ($TesterScenes) {
+    $testObject = Join-Path $objects 'SceneManagerTests.obj'
+    $testSource = Join-Path $projectRoot 'tests/SceneManagerTests.cpp'
+    $testChanged = Compile-Source $testSource $testObject
+    $testExecutable = Join-Path $output 'scene-manager-tests.exe'
+    if ($testChanged -or $archiveChanged -or -not (Test-Path -LiteralPath $testExecutable)) {
+        & link.exe /nologo /debug /machine:x64 /subsystem:console "/OUT:$testExecutable" $testObject $library
+        if ($LASTEXITCODE -ne 0) { throw 'Liaison des tests du gestionnaire de scenes echouee.' }
+    }
+    & $testExecutable
+    if ($LASTEXITCODE -ne 0) { throw 'Tests du gestionnaire de scenes echoues.' }
 }

@@ -5,7 +5,9 @@
 #include <functional>
 
 namespace moteur {
-class Scene;
+class IScene;
+using Scene = IScene;
+class SceneManager;
 
 class Engine {
 public:
@@ -21,6 +23,8 @@ public:
     bool run(Scene& scene,
              const std::function<void(float)>& update,
              const std::function<void()>& render);
+    // Cette surcharge branche automatiquement la boucle sur la scène active.
+    bool run(SceneManager& scenes);
     void stop() { running = false; }
     bool shutdown();
     bool isRunning() const { return running; }
