@@ -20,9 +20,16 @@ private:
     int& compteur;
 };
 
+// L'interface IScene est abstraite: le contrôle utilise ici une scène minimale.
+class SceneVide final : public moteur::IScene {
+public:
+    bool load() override { return true; }
+    void unload() override {}
+};
+
 bool verifierGestionnaireEvenements() {
-    moteur::Scene sceneA;
-    moteur::Scene sceneB;
+    SceneVide sceneA;
+    SceneVide sceneB;
     if (&sceneA.getEventManager() == &sceneB.getEventManager()) return false;
 
     moteur::EventManager& manager = sceneA.getEventManager();

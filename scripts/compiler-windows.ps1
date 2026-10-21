@@ -1,4 +1,4 @@
-﻿param([switch]$Verifier, [switch]$TesterRessources)
+param([switch]$Verifier, [switch]$TesterRessources, [switch]$TesterScenes)
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
 Set-Location -LiteralPath $projectRoot
@@ -111,4 +111,17 @@ if ($TesterRessources) {
     Copy-Item -LiteralPath (Join-Path $projectRoot 'tests/assets/pixels.png') -Destination $testAssets -Force
     & $testExecutable
     if ($LASTEXITCODE -ne 0) { throw 'Tests de ressources echoues.' }
+}
+
+if ($TesterScenes) {
+    $testObject = Join-Path $objects 'SceneManagerTests.obj'
+    $testSource = Join-Path $projectRoot 'tests/SceneManagerTests.cpp'
+    $testChanged = Compile-Source $testSource $testObject
+    $testExecutable = Join-Path $output 'scene-manager-tests.exe'
+    if ($testChanged -or $archiveChanged -or -not (Test-Path -LiteralPath $testExecutable)) {
+        & link.exe /nologo /debug /machine:x64 /subsystem:console "/OUT:$testExecutable" $testObject $library
+        if ($LASTEXITCODE -ne 0) { throw 'Liaison des tests du gestionnaire de scenes echouee.' }
+    }
+    & $testExecutable
+    if ($LASTEXITCODE -ne 0) { throw 'Tests du gestionnaire de scenes echoues.' }
 }
