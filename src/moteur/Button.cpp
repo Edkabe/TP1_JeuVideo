@@ -1,5 +1,6 @@
 #include "moteur/Button.h"
-#include "moteur/VertexShader.h"
+#include "moteur/Engine.h"
+#include "moteur/ProgramCache.h"
 #include <SDL3/SDL.h>
 #include <filesystem>
 #include <cmath>
@@ -94,11 +95,12 @@ bool Button::createGraphics() {
     const char* base = SDL_GetBasePath();
     if (!base) { error = SDL_GetError(); return false; }
     const auto directory = std::filesystem::path(base) / "assets/shaders";
-    VertexShader vertex;
-    Shader fragment(GL_FRAGMENT_SHADER);
-    if (!vertex.loadShader((directory / "button.vert").string())) { error = vertex.getError(); return false; }
-    if (!fragment.loadShader((directory / "button.frag").string())) { error = fragment.getError(); return false; }
-    if (!program.link({&vertex, &fragment})) { error = program.getError(); return false; }
+    ProgramCache cache;
+    if (!cache.load(program, {{GL_VERTEX_SHADER, directory / "button.vert"},
+                              {GL_FRAGMENT_SHADER, directory / "button.frag"}},
+                    std::filesystem::path(base) / "cache/programs/button.bin", Engine::getInstance().getSettings())) {
+        error = cache.getError(); return false;
+    }
     if (!vao.create()) { error = "Creation du VAO du bouton impossible."; return false; }
     return true;
 }

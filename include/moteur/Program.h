@@ -15,6 +15,7 @@ public:
     Program(const Program&) = delete;
     Program& operator=(const Program&) = delete;
     bool link(std::initializer_list<const Shader*> shaders);
+    bool link(const std::vector<const Shader*>& shaders);
     // Necessite un contexte OpenGL courant et charge par GLAD.
     static bool supportsBinary();
     bool getBinary(Binary& binary);

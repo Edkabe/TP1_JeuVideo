@@ -2,6 +2,7 @@
 
 #include <filesystem>
 #include <string>
+#include <cstdint>
 
 namespace moteur {
 
@@ -18,6 +19,8 @@ public:
     bool isVSyncEnabled() const { return vsync; }
     float getSensitivity() const { return sensitivity; }
     float getFov() const { return fov; }
+    std::uint32_t getProgramBinaryFormat() const { return programBinaryFormat; }
+    void setProgramBinaryFormat(std::uint32_t format) { programBinaryFormat = format; }
     const std::filesystem::path& getFilePath() const { return filePath; }
     const std::string& getError() const { return error; }
 
@@ -44,6 +47,7 @@ private:
     bool vsync = false;
     float sensitivity = 0.0f;
     float fov = 0.0f;
+    std::uint32_t programBinaryFormat = 0; // 0 : aucun format encore memorise.
     std::string error;
 };
 
