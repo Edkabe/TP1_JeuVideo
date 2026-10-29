@@ -14,6 +14,27 @@ bool Engine::initialize(const std::string& title, int width, int height, bool hi
         error = window.getError(); SDL_QuitSubSystem(SDL_INIT_VIDEO); return false;
     }
     initialized = true;
+    // Settings est charge avant l'initialisation du moteur; appliquer ses valeurs
+    // ici garantit que la resolution sauvegardee revient au prochain lancement.
+    if (!applySettings()) {
+        const std::string applyError = error;
+        window.close();
+        SDL_QuitSubSystem(SDL_INIT_VIDEO);
+        initialized = false;
+        error = applyError;
+        return false;
+    }
+    return true;
+}
+
+bool Engine::applySettings() {
+    if (!initialized) { error = "Le moteur doit etre initialise avant d'appliquer les parametres."; return false; }
+    if (!window.applyDisplaySettings(settings.getWidth(), settings.getHeight(),
+                                     settings.isFullscreen(), settings.isVSyncEnabled())) {
+        error = window.getError();
+        return false;
+    }
+    error.clear();
     return true;
 }
 bool Engine::run(const std::function<void(float)>& update, const std::function<void()>& render,

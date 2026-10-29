@@ -15,6 +15,8 @@ public:
     Engine(const Engine&) = delete;
     Engine& operator=(const Engine&) = delete;
     bool initialize(const std::string& title = "TP1", int width = 960, int height = 540, bool hidden = false);
+    // Applique a la fenetre les parametres d'affichage actuellement charges ou modifies.
+    bool applySettings();
     // Les callbacks seront remplacés/branchés sur le gestionnaire de scènes.
     bool run(const std::function<void(float)>& update,
              const std::function<void()>& render,

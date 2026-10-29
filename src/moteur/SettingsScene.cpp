@@ -259,6 +259,26 @@ void SettingsScene::applyChanges() {
     }
     settings.setFullscreen(fullscreen->isChecked());
     settings.setVSync(vsync->isChecked());
+    auto& engine = Engine::getInstance();
+    // Appliquer d'abord les changements au moteur. Window restaure son etat precedent
+    // si SDL refuse une resolution, le plein ecran ou la VSync.
+    if (!engine.applySettings()) {
+        error = engine.getError();
+        settings.setLanguage(oldLanguage);
+        settings.setResolution(oldWidth, oldHeight);
+        settings.setFullscreen(oldFullscreen);
+        settings.setVSync(oldVsync);
+        settings.setSensitivity(oldSensitivity);
+        settings.setFov(oldFov);
+        // Window fait deja un retour arriere, mais cette seconde application
+        // retente explicitement les valeurs sauvegardees si SDL a signale un
+        // retour arriere incomplet.
+        const std::string applyError = error;
+        if (!engine.applySettings()) error += " | Restauration de l'affichage impossible : " + engine.getError();
+        else error = applyError;
+        status->setText("Application impossible : " + error);
+        return;
+    }
     if (!settings.save()) {
         error = settings.getError();
         settings.setLanguage(oldLanguage);
@@ -267,7 +287,10 @@ void SettingsScene::applyChanges() {
         settings.setVSync(oldVsync);
         settings.setSensitivity(oldSensitivity);
         settings.setFov(oldFov);
-        status->setText("Échec de l'enregistrement des paramètres.");
+        // Si l'ecriture echoue, restaurer aussi les reglages effectivement appliques.
+        const std::string saveError = error;
+        if (!engine.applySettings()) error += " | Restauration de l'affichage impossible : " + engine.getError();
+        status->setText("Échec de l'enregistrement : " + saveError);
         return;
     }
     error.clear();

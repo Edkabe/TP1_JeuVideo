@@ -1,6 +1,6 @@
 param([switch]$Verifier, [switch]$TesterRessources, [switch]$TesterParametres,
     [switch]$TesterMathematiques, [switch]$TesterEtiquette, [switch]$TesterScenes,
-    [switch]$CompilerDemoScenes)
+    [switch]$CompilerDemoScenes, [switch]$TesterApplicationParametres)
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
 Set-Location -LiteralPath $projectRoot
@@ -158,6 +158,18 @@ if ($TesterScenes) {
     }
     & $testExecutable
     if ($LASTEXITCODE -ne 0) { throw 'Tests du gestionnaire de scenes echoues.' }
+}
+if ($TesterApplicationParametres) {
+    $testObject = Join-Path $objects 'EngineSettingsApplicationTests.obj'
+    $testSource = Join-Path $projectRoot 'tests/EngineSettingsApplicationTests.cpp'
+    $testChanged = Compile-Source $testSource $testObject
+    $testExecutable = Join-Path $output 'engine-settings-application-tests.exe'
+    if ($testChanged -or $archiveChanged -or -not (Test-Path -LiteralPath $testExecutable)) {
+        & link.exe /nologo /debug /machine:x64 /subsystem:console "/OUT:$testExecutable" $testObject $library "/LIBPATH:$output/lib" gl.lib SDL3.lib SDL3_image.lib SDL3_ttf.lib opengl32.lib
+        if ($LASTEXITCODE -ne 0) { throw 'Liaison des tests d application des parametres echouee.' }
+    }
+    & $testExecutable
+    if ($LASTEXITCODE -ne 0) { throw 'Tests d application des parametres echoues.' }
 }
 if ($CompilerDemoScenes) {
     $demoObject = Join-Path $objects 'SceneTransitions.obj'
