@@ -4,8 +4,10 @@
 #include "moteur/Bibliotheques.h"
 #include "moteur/CheckBox.h"
 #include "moteur/Engine.h"
+#include "moteur/EventManager.h"
 #include "moteur/Font.h"
 #include "moteur/Label.h"
+#include "moteur/Slider.h"
 #include "moteur/VertexShader.h"
 #include "moteur/Program.h"
 #include "moteur/VAO.h"
@@ -15,6 +17,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <memory>
+#include <string>
 #include <string_view>
 #include <type_traits>
 #include <utility>
@@ -191,6 +194,31 @@ bool demonstrate(moteur::Engine& engine, bool smoke) {
   if (!checkBox.initialize()) {
     std::cerr << checkBox.getError() << '\n'; return false;
   }
+  // Le pointeur partagé garde le contrôle en vie pendant ses abonnements.
+  auto slider = std::make_shared<moteur::Slider>();
+  slider->setPosition({24.0f, 82.0f});
+  slider->setDimensions({260.0f, 28.0f});
+  if (!slider->setRange(0.0f, 100.0f, 5.0f) || !slider->setValue(50.0f)) {
+    std::cerr << slider->getError() << '\n'; return false;
+  }
+  slider->setBorderColor({0.08f, 0.10f, 0.14f, 1.0f});
+  slider->setBackgroundColor({0.82f, 0.85f, 0.90f, 1.0f});
+  slider->setProgressColor({0.10f, 0.48f, 0.78f, 1.0f});
+  slider->setHoverColor({0.20f, 0.72f, 0.96f, 1.0f});
+  moteur::EventManager sliderEvents;
+  for (Uint32 type : {SDL_EVENT_MOUSE_MOTION, SDL_EVENT_MOUSE_BUTTON_DOWN,
+                      SDL_EVENT_MOUSE_BUTTON_UP, SDL_EVENT_WINDOW_FOCUS_LOST,
+                      SDL_EVENT_WINDOW_MOUSE_LEAVE}) {
+    if (!sliderEvents.addObserver(slider, type)) {
+      std::cerr << "Inscription du glisseur aux evenements impossible.\n";
+      return false;
+    }
+  }
+  moteur::Label sliderValueLabel(labelAvailable
+      ? engine.getResourceManager().get<moteur::Font>("police-demonstration")
+      : std::shared_ptr<moteur::Font>{}, "Valeur du glisseur : 50");
+  sliderValueLabel.setPosition({24.0f, 118.0f});
+  sliderValueLabel.setColor({1.0f, 1.0f, 1.0f, 1.0f});
   // Les trois sommets sont stockés dans le VBO; le VAO mémorise leur attribut.
   constexpr std::array<GLfloat, 6> triangle{
       -0.65f, -0.55f, 0.65f, -0.55f, 0.0f, 0.65f};
@@ -242,6 +270,12 @@ bool demonstrate(moteur::Engine& engine, bool smoke) {
     if (labelAvailable && !label.render()) {
       std::cerr << label.getError() << '\n'; valid = false; engine.stop(); return;
     }
+    if (!slider->render()) {
+      std::cerr << slider->getError() << '\n'; valid = false; engine.stop(); return;
+    }
+    if (labelAvailable && !sliderValueLabel.render()) {
+      std::cerr << sliderValueLabel.getError() << '\n'; valid = false; engine.stop(); return;
+    }
     if (smoke) {
       unsigned char pixel[4]{};
       glReadPixels(width / 2, height / 2, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, pixel);
@@ -256,6 +290,10 @@ bool demonstrate(moteur::Engine& engine, bool smoke) {
     ++frames;
   }, [&](const SDL_Event& event) {
     if (event.type == SDL_EVENT_KEY_DOWN && event.key.key == SDLK_ESCAPE) engine.stop();
+    const moteur::Event wrappedEvent(event);
+    sliderEvents.notifyObservers(wrappedEvent);
+    sliderValueLabel.setText("Valeur du glisseur : " +
+        std::to_string(static_cast<int>(slider->getValue())));
     if (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN &&
         event.button.windowID == engine.getWindow().getId()) checkBox.handleEvent(event);
   });
