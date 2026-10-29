@@ -1,6 +1,7 @@
 #pragma once
 
 #include "moteur/Color.h"
+#include "moteur/EventObserver.h"
 #include "moteur/Program.h"
 #include "moteur/VAO.h"
 #include "moteur/VBO.h"
@@ -13,7 +14,7 @@
 namespace moteur {
 
 // Case carrée dessinée en pixels, depuis le coin supérieur gauche de la fenêtre.
-class CheckBox {
+class CheckBox final : public EventObserver {
 public:
     CheckBox() = default;
     ~CheckBox() = default;
@@ -40,6 +41,8 @@ public:
 
     // Retourne vrai si le clic gauche a touché la case et modifié son état.
     bool handleEvent(const SDL_Event& event);
+    // Adapte l'événement de scène au gestionnaire historique de la case.
+    void onEvent(const Event& event) override { handleEvent(event.getSDLEvent()); }
 
 private:
     struct Vertex {

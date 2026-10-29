@@ -9,6 +9,7 @@
 #include "moteur/MainScene.h"
 #include "moteur/CreditsScene.h"
 #include "moteur/DemoGameScene.h"
+#include "moteur/SettingsScene.h"
 #include "moteur/VBO.h"
 #include <array>
 #include <filesystem>
@@ -25,13 +26,15 @@ bool showMenu(moteur::Engine& engine) {
   if (!base || !windows) { std::cerr << "Dossier des ressources ou de Windows indisponible.\n"; return false; }
   const auto font = std::filesystem::path(windows) / "Fonts/arial.ttf";
   moteur::SceneManager scenes;
+  const auto background = std::filesystem::path(base) / "assets/images/menu-background.svg";
   auto menu = std::make_unique<moteur::MainScene>(scenes,font,
-      std::filesystem::path(base) / "assets/images/menu-background.svg",
-      moteur::MainScene::Targets{"demonstration", "", "credits"});
+      background,
+      moteur::MainScene::Targets{"demonstration", "parametres", "credits"});
   auto* menuPointer = menu.get();
   if (!scenes.addScene("menu",std::move(menu))) { std::cerr << scenes.getError() << '\n'; return false; }
   if (!scenes.addScene("credits",std::make_unique<moteur::CreditsScene>(scenes,font,"menu")) ||
       !scenes.addScene("demonstration",std::make_unique<moteur::DemoGameScene>(scenes,font,"menu")) ||
+      !scenes.addScene("parametres",std::make_unique<moteur::SettingsScene>(scenes,font,background,"menu")) ||
       !scenes.setActiveScene("menu")) {
     std::cerr << scenes.getError() << " " << menuPointer->getError() << '\n'; return false;
   }
