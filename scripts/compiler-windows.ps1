@@ -1,4 +1,4 @@
-param([switch]$Verifier, [switch]$TesterRessources, [switch]$TesterParametres,
+﻿param([switch]$Verifier, [switch]$TesterRessources, [switch]$TesterParametres,
     [switch]$TesterMathematiques, [switch]$TesterEtiquette, [switch]$TesterScenes,
     [switch]$TesterIntegration, [switch]$TesterApplicationParametres,
     [switch]$CompilerDemoScenes)
@@ -143,10 +143,6 @@ if ($TesterMathematiques) {
     if ($LASTEXITCODE -ne 0) { throw 'Tests mathématiques échoués.' }
 }
 
-if ($TesterEtiquette) {
-    & $executable --label-check
-    if ($LASTEXITCODE -ne 0) { throw 'Verification du controle Etiquette echouee.' }
-}
 
 if ($TesterScenes) {
     $testObject = Join-Path $objects 'SceneManagerTests.obj'
@@ -172,7 +168,7 @@ if ($TesterApplicationParametres) {
     & $testExecutable
     if ($LASTEXITCODE -ne 0) { throw 'Tests d application des parametres echoues.' }
 }
-if ($TesterIntegration) {
+if ($TesterIntegration -or $TesterEtiquette) {
     $testObject = Join-Path $objects 'SceneIntegrationTests.obj'
     $testSource = Join-Path $projectRoot 'tests/SceneIntegrationTests.cpp'
     $testChanged = Compile-Source $testSource $testObject
