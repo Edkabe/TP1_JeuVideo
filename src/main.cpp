@@ -173,7 +173,6 @@ bool demonstrate(moteur::Engine& engine, bool smoke) {
       : std::shared_ptr<moteur::Font>{}, "TP1 - Controle Etiquette");
   label.setPosition({18.0f, 18.0f});
   label.setColor({1.0f, 1.0f, 1.0f, 1.0f});
-  moteur::CheckBox checkBox;
   const char* basePath = SDL_GetBasePath();
   if (!basePath) { std::cerr << SDL_GetError() << '\n'; return false; }
   const std::filesystem::path shaders = std::filesystem::path(basePath) / "assets" / "shaders";

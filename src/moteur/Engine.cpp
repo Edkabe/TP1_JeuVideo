@@ -68,7 +68,6 @@ bool Engine::run(SceneManager& scenes) {
             scenes.dispatchEvent(event);
         });
 }
-
 bool Engine::shutdown() {
     if (running) { error = "Arreter la boucle avant de fermer le moteur."; return false; }
     // Les objets graphiques clients doivent être libérés AVANT cet appel.

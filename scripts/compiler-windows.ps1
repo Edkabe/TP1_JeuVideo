@@ -1,5 +1,6 @@
 param([switch]$Verifier, [switch]$TesterRessources, [switch]$TesterParametres,
-    [switch]$TesterMathematiques, [switch]$TesterEtiquette, [switch]$TesterScenes)
+    [switch]$TesterMathematiques, [switch]$TesterEtiquette, [switch]$TesterScenes,
+    [switch]$CompilerDemoScenes)
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
 Set-Location -LiteralPath $projectRoot
@@ -126,7 +127,6 @@ if ($TesterParametres) {
     & $testExecutable
     if ($LASTEXITCODE -ne 0) { throw 'Tests des paramètres échoués.' }
 }
-
 if ($TesterMathematiques) {
     $mathExecutable = Join-Path $output 'math-tests.exe'
     $mathSource = Join-Path $projectRoot 'tests/MathTests.cpp'
@@ -153,4 +153,14 @@ if ($TesterScenes) {
     }
     & $testExecutable
     if ($LASTEXITCODE -ne 0) { throw 'Tests du gestionnaire de scenes echoues.' }
+}
+if ($CompilerDemoScenes) {
+    $demoObject = Join-Path $objects 'SceneTransitions.obj'
+    $demoChanged = Compile-Source (Join-Path $projectRoot 'examples/SceneTransitions.cpp') $demoObject
+    $demoExecutable = Join-Path $output 'scene-demo.exe'
+    if ($demoChanged -or $archiveChanged -or $linkChanged -or -not (Test-Path -LiteralPath $demoExecutable)) {
+        & link.exe /nologo /debug /machine:x64 /subsystem:console "/OUT:$demoExecutable" $demoObject $library "/LIBPATH:$output/lib" gl.lib SDL3.lib SDL3_image.lib SDL3_ttf.lib opengl32.lib
+        if ($LASTEXITCODE -ne 0) { throw 'Liaison de la demonstration scenes echouee.' }
+    }
+    Write-Host 'Demonstration compilee : .\build\scene-demo.exe'
 }
