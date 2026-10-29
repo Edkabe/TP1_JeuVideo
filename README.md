@@ -26,5 +26,5 @@ Les dépendances déjà fournies sont réutilisées, sans vcpkg.
 
 ## Menu principal
 
-Apres compilation, lancer `build/program.exe` pour ouvrir le menu, la demonstration provisoire ou les credits. Le bouton Parametres attend encore la scene d'Oceane.
-Voir [les commandes et le fonctionnement](doc/MenuPrincipal.md). Le triangle reste accessible avec `--triangle` et son test avec `--smoke`.
+Apres compilation, lancer `build/program.exe` pour ouvrir le menu, la demonstration provisoire, les parametres ou les credits.
+Voir [les commandes et le fonctionnement](doc/MenuPrincipal.md) ainsi que le [guide de validation](doc/Integration.md). Le triangle reste accessible avec `--triangle` et son test avec `--smoke`.

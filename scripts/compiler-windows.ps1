@@ -1,5 +1,6 @@
 param([switch]$Verifier, [switch]$TesterRessources, [switch]$TesterParametres,
     [switch]$TesterMathematiques, [switch]$TesterEtiquette, [switch]$TesterScenes,
+    [switch]$TesterIntegration,
     [switch]$CompilerDemoScenes)
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
@@ -153,11 +154,26 @@ if ($TesterScenes) {
     $testChanged = Compile-Source $testSource $testObject
     $testExecutable = Join-Path $output 'scene-manager-tests.exe'
     if ($testChanged -or $archiveChanged -or -not (Test-Path -LiteralPath $testExecutable)) {
-        & link.exe /nologo /debug /machine:x64 /subsystem:console "/OUT:$testExecutable" $testObject $library
+        & link.exe /nologo /debug /machine:x64 /subsystem:console "/OUT:$testExecutable" $testObject $library "/LIBPATH:$output/lib" gl.lib SDL3.lib SDL3_image.lib SDL3_ttf.lib opengl32.lib
         if ($LASTEXITCODE -ne 0) { throw 'Liaison des tests du gestionnaire de scenes echouee.' }
     }
     & $testExecutable
     if ($LASTEXITCODE -ne 0) { throw 'Tests du gestionnaire de scenes echoues.' }
+}
+if ($TesterIntegration) {
+    $testObject = Join-Path $objects 'SceneIntegrationTests.obj'
+    $testSource = Join-Path $projectRoot 'tests/SceneIntegrationTests.cpp'
+    $testChanged = Compile-Source $testSource $testObject
+    $testExecutable = Join-Path $output 'scene-integration-tests.exe'
+    if ($testChanged -or $archiveChanged -or -not (Test-Path -LiteralPath $testExecutable)) {
+        & link.exe /nologo /debug /machine:x64 /subsystem:console "/OUT:$testExecutable" $testObject $library "/LIBPATH:$output/lib" gl.lib SDL3.lib SDL3_image.lib SDL3_ttf.lib opengl32.lib
+        if ($LASTEXITCODE -ne 0) { throw 'Liaison des tests d integration echouee.' }
+    }
+    Push-Location $output
+    try {
+        & $testExecutable
+        if ($LASTEXITCODE -ne 0) { throw 'Tests d integration echoues.' }
+    } finally { Pop-Location }
 }
 if ($CompilerDemoScenes) {
     $demoObject = Join-Path $objects 'SceneTransitions.obj'

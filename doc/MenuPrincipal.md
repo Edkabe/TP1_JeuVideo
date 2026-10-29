@@ -35,8 +35,10 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\compiler-windows.p
 .\build\program.exe
 ```
 
-Demarrer ouvre `DemoGameScene`, une destination provisoire explicitement choisie avec Eddy. Elle affiche un titre, une barre de progression animee et un bouton Retour au menu ; aucun jeu complet n'est implemente.
+Demarrer ouvre `DemoGameScene`, une destination provisoire explicitement choisie avec Eddy. Elle affiche un titre, une barre de progression animee, le glisseur et un bouton Retour au menu ; aucun jeu complet n'est implemente.
+Parametres ouvre `SettingsScene`. Les choix sont initialises avec les valeurs actuelles ; Appliquer les enregistre puis revient au menu, tandis que Retour abandonne les changements.
 Credits ouvre la vraie `CreditsScene`, avec retour au menu.
-Le bouton Parametres affiche un message d'indisponibilite tant que la scene d'Oceane n'est pas poussee et branchee. Aucune classe de parametres fictive n'est creee.
+
+L'enregistrement de la scene modifie le fichier `settings.bin`. L'application effective de la resolution, du plein ecran et de la VSync au moteur est suivie dans l'issue #23.
 
 Le triangle reste disponible avec `--triangle` ; `--smoke` conserve son test graphique automatique et `--check` la verification des dependances.
