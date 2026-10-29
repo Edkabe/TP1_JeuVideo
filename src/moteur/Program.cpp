@@ -2,6 +2,8 @@
 #include <vector>
 #include <limits>
 #include <algorithm>
+#include <SDL3/SDL.h>
+#include <string_view>
 
 namespace moteur {
 Program::~Program() { release(); }
@@ -9,6 +11,9 @@ Program::~Program() { release(); }
     void Program::use() const { glUseProgram(id); }
     void Program::unuse() { glUseProgram(0); }
     bool Program::link(std::initializer_list<const Shader*> shaders) {
+        return link(std::vector<const Shader*>(shaders));
+    }
+    bool Program::link(const std::vector<const Shader*>& shaders) {
         error.clear();
         if (!shaders.size()) { error = "Aucun nuanceur fourni."; return false; }
         for (const auto* shader : shaders) {
@@ -34,8 +39,25 @@ Program::~Program() { release(); }
         return true;
     }
     bool Program::supportsBinary() {
-        // Notre GLAD expose ces fonctions a partir d'OpenGL 4.1.
-        if (!GLAD_GL_VERSION_4_1 || !glGetProgramBinary || !glProgramBinary || !glProgramParameteri) return false;
+        if (!SDL_GL_GetCurrentContext()) return false;
+        // Un pilote 3.3 peut proposer l'extension sans exposer le coeur 4.1.
+        // Notre GLAD ne charge pas ces trois entrees dans ce cas.
+        if (!GLAD_GL_VERSION_4_1) {
+            if (!glGetStringi) return false;
+            GLint extensions = 0; glGetIntegerv(GL_NUM_EXTENSIONS, &extensions);
+            bool available = false;
+            for (GLint i = 0; i < extensions; ++i) {
+                const auto* name = glGetStringi(GL_EXTENSIONS, static_cast<GLuint>(i));
+                if (name && std::string_view(reinterpret_cast<const char*>(name)) == "GL_ARB_get_program_binary") {
+                    available = true; break;
+                }
+            }
+            if (!available) return false;
+            glad_glGetProgramBinary = reinterpret_cast<PFNGLGETPROGRAMBINARYPROC>(SDL_GL_GetProcAddress("glGetProgramBinary"));
+            glad_glProgramBinary = reinterpret_cast<PFNGLPROGRAMBINARYPROC>(SDL_GL_GetProcAddress("glProgramBinary"));
+            glad_glProgramParameteri = reinterpret_cast<PFNGLPROGRAMPARAMETERIPROC>(SDL_GL_GetProcAddress("glProgramParameteri"));
+        }
+        if (!glGetProgramBinary || !glProgramBinary || !glProgramParameteri) return false;
         GLint count = 0;
         glGetIntegerv(GL_NUM_PROGRAM_BINARY_FORMATS, &count);
         return count > 0;

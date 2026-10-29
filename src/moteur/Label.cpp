@@ -1,35 +1,15 @@
 #include "moteur/Label.h"
+#include "moteur/ProgramCache.h"
+#include "moteur/Engine.h"
 #include <SDL3/SDL.h>
 #include <algorithm>
 #include <memory>
 
 namespace moteur {
 namespace {
-constexpr const char* vertexSource = R"glsl(#version 330 core
-layout(location = 0) in vec2 aPosition;
-layout(location = 1) in vec2 aTexCoord;
-uniform vec2 uViewport;
-uniform vec2 uPosition;
-uniform vec2 uSize;
-out vec2 vTexCoord;
-void main() {
-    vec2 pixel = uPosition + aPosition * uSize;
-    gl_Position = vec4(pixel.x * 2.0 / uViewport.x - 1.0,
-                       1.0 - pixel.y * 2.0 / uViewport.y, 0.0, 1.0);
-    vTexCoord = aTexCoord;
-}
-)glsl";
 
-constexpr const char* fragmentSource = R"glsl(#version 330 core
-in vec2 vTexCoord;
-uniform sampler2D uText;
-uniform vec4 uColor;
-out vec4 outColor;
-void main() {
-    float coverage = texture(uText, vTexCoord).a;
-    outColor = vec4(uColor.rgb, uColor.a * coverage);
-}
-)glsl";
+
+
 
 struct SurfaceDeleter {
     void operator()(SDL_Surface* surface) const { SDL_DestroySurface(surface); }
@@ -75,9 +55,15 @@ bool Label::createGraphics() {
     if (program_.getId() && vao_.getId() && vbo_.getId() && viewportUniform_ >= 0 &&
         positionUniform_ >= 0 && sizeUniform_ >= 0 && colorUniform_ >= 0 && samplerUniform_ >= 0) return true;
     error_.clear();
-    if (!vertexShader_.compile(vertexSource)) { error_ = vertexShader_.getError(); return false; }
-    if (!fragmentShader_.compile(fragmentSource)) { error_ = fragmentShader_.getError(); return false; }
-    if (!program_.link({&vertexShader_, &fragmentShader_})) { error_ = program_.getError(); return false; }
+    const char* base = SDL_GetBasePath();
+    if (!base) { error_ = SDL_GetError(); return false; }
+    const auto directory = std::filesystem::path(base) / "assets/shaders";
+    ProgramCache cache;
+    if (!cache.load(program_, {{GL_VERTEX_SHADER, directory / "label.vert"},
+                               {GL_FRAGMENT_SHADER, directory / "label.frag"}},
+                    std::filesystem::path(base) / "cache/programs/label.bin", Engine::getInstance().getSettings())) {
+        error_ = cache.getError(); return false;
+    }
     if (!vao_.create() || !vbo_.create()) { error_ = "Creation des objets du texte impossible."; return false; }
 
     // Un quad unité permet de changer position et taille sans renvoyer ses sommets.

@@ -96,6 +96,11 @@ New-Item -ItemType Directory -Path $shaderOutput -Force | Out-Null
 Get-ChildItem -LiteralPath (Join-Path $projectRoot 'assets/shaders') -File | ForEach-Object {
     Copy-Item -LiteralPath $_.FullName -Destination (Join-Path $shaderOutput $_.Name) -Force
 }
+$imageOutput = Join-Path $output 'assets/images'
+New-Item -ItemType Directory -Path $imageOutput -Force | Out-Null
+Get-ChildItem -LiteralPath (Join-Path $projectRoot 'assets/images') -File | ForEach-Object {
+    Copy-Item -LiteralPath $_.FullName -Destination (Join-Path $imageOutput $_.Name) -Force
+}
 if ($Verifier) {
     & $executable --check
     if ($LASTEXITCODE -ne 0) { throw 'Test des dépendances échoué.' }

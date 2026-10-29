@@ -12,7 +12,7 @@ namespace {
 // La signature et la version permettent de détecter un mauvais fichier et
 // de faire évoluer le format sans dépendre du remplissage mémoire d'une struct.
 constexpr std::array<char, 8> signature{{'T','P','1','S','E','T','0','1'}};
-constexpr std::uint32_t formatVersion = 1;
+constexpr std::uint32_t formatVersion = 2;
 constexpr std::uint32_t maxLanguageLength = 16;
 
 bool writeU32(std::ostream& out, std::uint32_t value) {
@@ -79,6 +79,7 @@ void Settings::resetToDefaults() {
     vsync = true;
     sensitivity = 1.0f;
     fov = 90.0f;
+    programBinaryFormat = 0;
 }
 
 bool Settings::setLanguage(const std::string& value) {
@@ -114,7 +115,8 @@ bool Settings::load() {
     std::uint32_t rawFullscreen = 0, rawVsync = 0;
     std::string loadedLanguage;
     float loadedSensitivity = 0.0f, loadedFov = 0.0f;
-    const bool headerValid = in && fileSignature == signature && readU32(in, version) && version == formatVersion;
+    std::uint32_t loadedBinaryFormat = 0;
+    const bool headerValid = in && fileSignature == signature && readU32(in, version) && (version == 1 || version == formatVersion);
     bool valid = headerValid && readU32(in, languageLength) && languageLength > 0 &&
         languageLength <= maxLanguageLength;
     if (valid) {
@@ -123,6 +125,7 @@ bool Settings::load() {
         valid = static_cast<bool>(in) && readU32(in, rawWidth) && readU32(in, rawHeight) &&
             readU32(in, rawFullscreen) && readU32(in, rawVsync) &&
             readFloat(in, loadedSensitivity) && readFloat(in, loadedFov);
+        if (valid && version >= 2) valid = readU32(in, loadedBinaryFormat);
     }
     // Une seule représentation canonique des booléens et aucune donnée
     // supplémentaire après le dernier champ simplifient la validation.
@@ -142,6 +145,7 @@ bool Settings::load() {
     vsync = rawVsync != 0;
     sensitivity = loadedSensitivity;
     fov = loadedFov;
+    programBinaryFormat = loadedBinaryFormat;
     return true;
 }
 
@@ -171,7 +175,7 @@ bool Settings::save() {
         writeU32(out, static_cast<std::uint32_t>(width)) &&
         writeU32(out, static_cast<std::uint32_t>(height)) &&
         writeU32(out, fullscreen ? 1u : 0u) && writeU32(out, vsync ? 1u : 0u) &&
-        writeFloat(out, sensitivity) && writeFloat(out, fov);
+        writeFloat(out, sensitivity) && writeFloat(out, fov) && writeU32(out, programBinaryFormat);
     out.flush();
     if (!fieldsWritten || !out) { error = "Écriture du fichier de paramètres échouée."; return false; }
     return true;

@@ -1,6 +1,7 @@
 #include "moteur/Image.h"
 #include "moteur/Matrix4.h"
-#include "moteur/VertexShader.h"
+#include "moteur/Engine.h"
+#include "moteur/ProgramCache.h"
 #include <SDL3/SDL.h>
 #include <filesystem>
 #include <algorithm>
@@ -40,11 +41,12 @@ bool Image::createGraphics() {
     const char* base = SDL_GetBasePath();
     if (!base) { error = SDL_GetError(); return false; }
     const auto directory = std::filesystem::path(base) / "assets/shaders";
-    VertexShader vertex;
-    Shader fragment(GL_FRAGMENT_SHADER);
-    if (!vertex.loadShader((directory / "image.vert").string())) { error = vertex.getError(); return false; }
-    if (!fragment.loadShader((directory / "image.frag").string())) { error = fragment.getError(); return false; }
-    if (!program.link({&vertex, &fragment})) { error = program.getError(); return false; }
+    ProgramCache cache;
+    if (!cache.load(program, {{GL_VERTEX_SHADER, directory / "image.vert"},
+                              {GL_FRAGMENT_SHADER, directory / "image.frag"}},
+                    std::filesystem::path(base) / "cache/programs/image.bin", Engine::getInstance().getSettings())) {
+        error = cache.getError(); return false;
+    }
     if (!vao.create() || !vbo.create()) { error = "Creation du rendu Image impossible."; return false; }
     constexpr GLfloat vertices[] = {
         0,0,0,0, 0,1,0,1, 1,1,1,1,
