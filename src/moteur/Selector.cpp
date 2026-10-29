@@ -7,12 +7,19 @@ namespace moteur {
 namespace {
 Vector2 selectorMousePosition(float x, float y, SDL_WindowID windowId) {
     SDL_Window* window = SDL_GetWindowFromID(windowId);
-    if (!window) return {x, y};
+    if (!window || !SDL_GL_GetCurrentContext()) return {x, y};
     int logicalWidth = 0, logicalHeight = 0, pixelWidth = 0, pixelHeight = 0;
     if (!SDL_GetWindowSize(window, &logicalWidth, &logicalHeight) ||
         logicalWidth <= 0 || logicalHeight <= 0 ||
         !SDL_GetWindowSizeInPixels(window, &pixelWidth, &pixelHeight)) return {x, y};
-    return {x * pixelWidth / logicalWidth, y * pixelHeight / logicalHeight};
+    // Les boutons internes utilisent les coordonnées du viewport OpenGL.
+    // Appliquer exactement la même conversion évite que les clics sur la
+    // valeur et ceux sur les flèches ciblent des zones différentes, surtout
+    // quand la fenêtre est mise à l'échelle par Windows.
+    GLint viewport[4]{};
+    glGetIntegerv(GL_VIEWPORT, viewport);
+    return {x * pixelWidth / logicalWidth - viewport[0],
+            y * pixelHeight / logicalHeight - (pixelHeight - viewport[1] - viewport[3])};
 }
 }
 

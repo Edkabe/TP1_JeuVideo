@@ -4,7 +4,6 @@
 #include "moteur/DemoGameScene.h"
 #include "moteur/SettingsScene.h"
 #include <SDL3/SDL.h>
-#include <cmath>
 #include <filesystem>
 #include <iostream>
 #include <memory>
@@ -116,41 +115,20 @@ int main() {
         click(scenes, 480.0f, 492.0f); // Bouton Retour au menu des credits.
         check(scenes.getActiveSceneName() == "menu" && menuView->isLoaded(), "Retour des credits au menu");
 
-        preferences.setSensitivity(2.0f);
-        preferences.setFov(120.0f);
         openFromMenu(*menuView, moteur::MainScene::Action::Start, "demonstration", scenes);
-        check(demoView->isLoaded(), "Chargement du jeu de tir aux cibles");
+        check(demoView->isLoaded(), "Chargement de la scene de demarrage");
+        check(demoView->getLoadingProgress() == 0.0f && !demoView->isLoadingComplete(),
+              "La progression commence a zero");
         scenes.render();
-        check(demoView->getError().empty(), "Rendu OpenGL du jeu et de ses controles");
-        check(demoView->getTargetDimensions().x < 88.0f,
-              "Un champ de vision plus large reduit la taille apparente de la cible");
-        const auto reticleStart = demoView->getReticlePosition();
-        const auto targetPosition = demoView->getTargetPosition();
-        const auto targetSize = demoView->getTargetDimensions();
-        SDL_Event aim{};
-        aim.type = SDL_EVENT_MOUSE_MOTION;
-        aim.motion.windowID = engine.getWindow().getId();
-        aim.motion.xrel = static_cast<float>((targetPosition.x + targetSize.x * 0.5f - reticleStart.x) / 2.0f);
-        aim.motion.yrel = static_cast<float>((targetPosition.y + targetSize.y * 0.5f - reticleStart.y) / 2.0f);
-        scenes.dispatchEvent(moteur::Event(aim));
-        const auto aimedPosition = demoView->getReticlePosition();
-        check(std::abs((aimedPosition.x - reticleStart.x) - aim.motion.xrel * 2.0f) < 0.01f,
-              "La sensibilite multiplie le deplacement du viseur");
-        SDL_Event fire{};
-        fire.type = SDL_EVENT_MOUSE_BUTTON_DOWN;
-        fire.button.windowID = engine.getWindow().getId();
-        fire.button.button = SDL_BUTTON_LEFT;
-        scenes.dispatchEvent(moteur::Event(fire));
-        check(demoView->getScore() == 1, "Un clic du viseur sur la cible augmente le score");
-        demoView->update(30.0f);
-        check(demoView->getTimeRemaining() == 0.0f, "Le compte a rebours termine la partie");
-        click(demoView->getRestartButton(), scenes);
-        check(demoView->getScore() == 0 && demoView->getTimeRemaining() == 30.0f,
-              "Recommencer lance une nouvelle partie");
+        check(demoView->getError().empty(), "Rendu OpenGL de la scene de demarrage");
+        demoView->update(1.5f);
+        check(demoView->getLoadingProgress() > 0.49f && demoView->getLoadingProgress() < 0.51f,
+              "La barre avance avec la duree du demarrage");
+        demoView->update(2.0f);
+        check(demoView->isLoadingComplete() && demoView->getLoadingProgress() == 1.0f,
+              "La progression atteint 100 pour cent et termine le demarrage simule");
         click(demoView->getReturnButton(), scenes);
-        check(scenes.getActiveSceneName() == "menu" && menuView->isLoaded(), "Retour de la demonstration au menu");
-        check(preferences.setSensitivity(1.0f) && preferences.setFov(90.0f) && preferences.save(),
-              "Restauration de la sensibilite et du champ de vision apres le test");
+        check(scenes.getActiveSceneName() == "menu" && menuView->isLoaded(), "Retour de la scene de demarrage au menu");
 
         const auto resourceCount = engine.getResourceManager().size();
         openFromMenu(*menuView, moteur::MainScene::Action::Settings, "parametres", scenes);

@@ -23,7 +23,7 @@ Lancer `build\program.exe`, puis parcourir les écrans plusieurs fois :
 1. Menu → Paramètres → Retour, puis menu → Paramètres → Appliquer.
 2. Paramètres → modifier chaque sélecteur, case et glisseur; vérifier les valeurs affichées et rouvrir l'écran après application.
 3. Menu → Crédits → Retour au menu.
-4. Menu → Jeu, viser plusieurs cibles, recommencer puis retourner au menu.
+4. Menu → Jeu, vérifier que la barre de progression avance jusqu'à 100 %, puis retourner au menu.
 5. Répéter les transitions et fermer avec Quitter puis avec le bouton de fermeture de la fenêtre.
 
 `SettingsTests` vérifie la première exécution sans fichier, la sauvegarde et le rechargement dans une nouvelle instance. `SceneManagerTests` vérifie les transitions et qu'une case à cocher cesse de recevoir les événements après la désactivation de sa scène. `ResourceTests --graphics` vérifie le cycle des ressources avec un contexte OpenGL actif.

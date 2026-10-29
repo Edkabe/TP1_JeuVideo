@@ -46,12 +46,22 @@ void Button::centerTitle() {
 bool Button::setPosition(Vector2 value) {
     error.clear();
     if (!finite(value)) { error = "Position invalide."; return false; }
-    position = value; hovered = pressed = false; centerTitle(); return true;
+    if (value.x != position.x || value.y != position.y) {
+        position = value;
+        hovered = pressed = false;
+        centerTitle();
+    }
+    return true;
 }
 bool Button::setDimensions(Vector2 value) {
     error.clear();
     if (!finite(value) || value.x < 0 || value.y < 0) { error = "Dimensions invalides."; return false; }
-    dimensions = value; hovered = pressed = false; centerTitle(); return true;
+    if (value.x != dimensions.x || value.y != dimensions.y) {
+        dimensions = value;
+        hovered = pressed = false;
+        centerTitle();
+    }
+    return true;
 }
 bool Button::setTitle(std::string value) {
     error.clear();

@@ -35,17 +35,17 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\compiler-windows.p
 .\build\program.exe
 ```
 
-Jeu ouvre `DemoGameScene`, un mini-jeu de tir aux cibles chronométré. Déplace le viseur avec la souris et clique dans la cible pour marquer des points avant la fin du compte à rebours. Recommencer lance une nouvelle partie; Retour au menu ferme le jeu.
+Jeu ouvre `DemoGameScene`, une démonstration du démarrage avec une barre de progression et le message « Le jeu est en train de démarrer… ». La progression est simulée sur trois secondes; elle atteint ensuite 100 % et affiche que la démonstration est terminée. Retour au menu ferme cet écran. Aucun jeu complet n'est demandé dans l'énoncé.
 Parametres ouvre `SettingsScene`. Les choix sont initialises avec les valeurs
 actuelles. **Appliquer** applique et enregistre les choix puis laisse l'écran
 ouvert pour permettre d'autres changements; **Retour** revient au menu.
 Les changements non appliques ne sont pas sauvegardes.
 Credits ouvre la vraie `CreditsScene`, avec retour au menu.
 
-La langue choisie traduit le menu, l'écran des paramètres, les crédits et le
-mini-jeu. La sensibilité multiplie le déplacement du viseur; le champ de vision
-change la taille apparente des cibles. L'application des paramètres modifie
-`settings.bin` et applique aussi à la fenêtre la résolution, le plein écran
-et la VSync choisis.
+La langue choisie traduit le menu, l'écran des paramètres, les crédits et la
+scène de démarrage. La sensibilité et le champ de vision sont enregistrés avec
+les autres paramètres, en prévision d'un jeu; cette démonstration de démarrage
+ne les utilise pas. L'application des paramètres modifie `settings.bin` et
+applique aussi à la fenêtre la résolution, le plein écran et la VSync choisis.
 
 Le triangle reste disponible avec `--triangle` ; `--smoke` conserve son test graphique automatique et `--check` la verification des dependances.

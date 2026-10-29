@@ -152,8 +152,8 @@
 <rect x="1638" y="2046" width="714" height="216" rx="9" fill="#fff" stroke="#28769a" stroke-width="2"/>
 <path d="M1647,2046 h696 a9,9 0 0 1 9,9 v35 h-714 v-35 a9,9 0 0 1 9,-9z" fill="#236b87"/>
 <text x="1654" y="2075" class="class-title">DemoGameScene : IScene</text>
-<text x="1654" y="2114" class="body">scenes · fontFile · returnScene · title/instructions · inputObserver</text>
-<text x="1654" y="2145" class="body">progress · target/back/restart · score/time · sensitivity/FOV</text>
+<text x="1654" y="2114" class="body">scenes · fontFile · returnScene · title/instructions · progress · back</text>
+<text x="1654" y="2145" class="body">title/instructions · progress · back · loadingTime/loadingComplete</text>
 <text x="1654" y="2176" class="body">load() · unload() · update() · render()</text>
 <rect x="2410" y="135" width="750" height="2220" rx="16" fill="#e9eff6" stroke="#c7d2df" stroke-width="2"/>
 <text x="2432" y="174" class="group-title">CONTRÔLES VISUELS</text>
