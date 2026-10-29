@@ -1,4 +1,5 @@
 #include "moteur/SceneManager.h"
+#include "moteur/CheckBox.h"
 #include <iostream>
 #include <memory>
 #include <stdexcept>
@@ -61,6 +62,29 @@ int main() {
         keyEvent.type = SDL_EVENT_KEY_DOWN;
         manager.dispatchEvent(moteur::Event(keyEvent));
         check(observer->calls == 1, "Evenement distribue par le gestionnaire actif");
+
+        // La case respecte le contrat d'observateur de la scène qui la possède.
+        auto checkBox = std::make_shared<moteur::CheckBox>();
+        checkBox->setPosition(10.0f, 20.0f);
+        checkBox->setSize(24.0f);
+        check(firstPointer->getEventManager().addObserver(checkBox, SDL_EVENT_MOUSE_BUTTON_DOWN),
+              "Case inscrite comme observateur de sa scene");
+        SDL_Event mouseEvent{};
+        mouseEvent.type = SDL_EVENT_MOUSE_BUTTON_DOWN;
+        mouseEvent.button.button = SDL_BUTTON_LEFT;
+        mouseEvent.button.x = 18.0f;
+        mouseEvent.button.y = 28.0f;
+        manager.dispatchEvent(moteur::Event(mouseEvent));
+        check(checkBox->isChecked(), "Clic gauche dans la case change son etat via la scene");
+        mouseEvent.button.x = 80.0f;
+        mouseEvent.button.y = 80.0f;
+        manager.dispatchEvent(moteur::Event(mouseEvent));
+        check(checkBox->isChecked(), "Clic hors de la case laisse son etat intact");
+        mouseEvent.button.x = 18.0f;
+        mouseEvent.button.y = 28.0f;
+        mouseEvent.button.button = SDL_BUTTON_RIGHT;
+        manager.dispatchEvent(moteur::Event(mouseEvent));
+        check(checkBox->isChecked(), "Clic droit ne change pas la case");
         manager.update(0.016f);
         manager.render();
         check(firstState->updates == 1 && firstState->renders == 1, "Mise a jour et rendu de la scene active");
@@ -85,6 +109,9 @@ int main() {
               manager.getActiveSceneName() == "jeu", "Transition de chargement et dechargement");
         manager.dispatchEvent(moteur::Event(keyEvent));
         check(observer->calls == 1, "Les evenements restent propres a chaque scene");
+        mouseEvent.button.button = SDL_BUTTON_LEFT;
+        manager.dispatchEvent(moteur::Event(mouseEvent));
+        check(checkBox->isChecked(), "La case de l'ancienne scene ne recoit plus les evenements");
         check(manager.removeScene("jeu"), "Retrait par nom de la scene active");
         check(secondState->unloads == 1 && manager.getActiveScene() == nullptr,
               "Le retrait de la scene active la decharge");

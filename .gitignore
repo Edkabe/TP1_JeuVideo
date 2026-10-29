@@ -24,4 +24,8 @@
 /build/engine-settings-application-tests.exe
 /build/engine-settings-application-tests.pdb
 /build/engine-settings-application-tests.ilk
+/build/scene-integration-tests.exe
+/build/scene-integration-tests.pdb
+/build/scene-integration-tests.ilk
+/build/settings.bin
 /build/cache/
