@@ -27,5 +27,9 @@
 /build/scene-integration-tests.exe
 /build/scene-integration-tests.pdb
 /build/scene-integration-tests.ilk
+# Symboles de débogage MSVC, y compris ceux déposés par erreur dans src/.
+*.pdb
+# Worktrees de revue locaux créés à l'intérieur du dépôt.
+/.event-pr-*/
 /build/settings.bin
 /build/cache/

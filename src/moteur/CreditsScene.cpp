@@ -1,5 +1,6 @@
 #include "moteur/CreditsScene.h"
 #include "moteur/Engine.h"
+#include "moteur/Localization.h"
 #include <SDL3/SDL.h>
 #include <algorithm>
 
@@ -25,12 +26,16 @@ bool CreditsScene::load() {
     if (returnScene.empty() || !scenes.hasScene(returnScene)) { error = "Scene de retour absente : " + returnScene; return false; }
     const auto titleFont = acquireFont(32), bodyFont = acquireFont(20);
     if (!titleFont || !bodyFont) return false;
-    labels.push_back(std::make_unique<Label>(titleFont,"Credits"));
-    for (const char* text : {"TP1 - Moteur graphique", "Projet realise par", "Edkabe et oceane-talla",
-                            "SDL3 | OpenGL | GLAD | GLM", "SDL_image | SDL_ttf"})
+    const auto& language = Engine::getInstance().getSettings().getLanguage();
+    labels.push_back(std::make_unique<Label>(titleFont, localized(language, "Crédits", "Credits")));
+    for (const char* text : {
+            localized(language, "TP1 - Moteur graphique", "TP1 - Graphics engine"),
+            localized(language, "Projet réalisé par", "Project by"),
+            "Edkabe et oceane-talla",
+            "SDL3 | OpenGL | GLAD | GLM", "SDL_image | SDL_ttf"})
         labels.push_back(std::make_unique<Label>(bodyFont,text));
     labels[2]->setColor({0.65f,0.78f,0.95f});
-    back = std::make_shared<Button>(bodyFont,"Retour au menu");
+    back = std::make_shared<Button>(bodyFont,localized(language,"Retour au menu","Back to menu"));
     back->setOnClick([this] {
         if (!scenes.setActiveScene(returnScene)) error = scenes.getError();
     });

@@ -1,8 +1,21 @@
 #include "moteur/Selector.h"
+#include <SDL3/SDL.h>
 #include <algorithm>
 #include <cmath>
 
 namespace moteur {
+namespace {
+Vector2 selectorMousePosition(float x, float y, SDL_WindowID windowId) {
+    SDL_Window* window = SDL_GetWindowFromID(windowId);
+    if (!window) return {x, y};
+    int logicalWidth = 0, logicalHeight = 0, pixelWidth = 0, pixelHeight = 0;
+    if (!SDL_GetWindowSize(window, &logicalWidth, &logicalHeight) ||
+        logicalWidth <= 0 || logicalHeight <= 0 ||
+        !SDL_GetWindowSizeInPixels(window, &pixelWidth, &pixelHeight)) return {x, y};
+    return {x * pixelWidth / logicalWidth, y * pixelHeight / logicalHeight};
+}
+}
+
 Selector::Selector(std::shared_ptr<Font> font, std::vector<std::string> values)
     : label(font), previousButton(font, "<"), nextButton(std::move(font), ">") {
     previousButton.setOnClick([this] { previous(); });
@@ -71,7 +84,37 @@ void Selector::setTextColor(Color color) { label.setColor(color); previousButton
 void Selector::setBorderColor(Color color) { previousButton.setBorderColor(color); nextButton.setBorderColor(color); }
 void Selector::setBackgroundColor(Color color) { previousButton.setBackgroundColor(color); nextButton.setBackgroundColor(color); }
 void Selector::setHoverColor(Color color) { previousButton.setHoverColor(color); nextButton.setHoverColor(color); }
-void Selector::onEvent(const Event& event) { previousButton.onEvent(event); nextButton.onEvent(event); }
+void Selector::onEvent(const Event& event) {
+    previousButton.onEvent(event);
+    nextButton.onEvent(event);
+
+    const auto& sdl = event.getSDLEvent();
+    if (sdl.type == SDL_EVENT_WINDOW_FOCUS_LOST || sdl.type == SDL_EVENT_WINDOW_MOUSE_LEAVE) {
+        pressedDirection = 0;
+        return;
+    }
+    if ((sdl.type != SDL_EVENT_MOUSE_BUTTON_DOWN && sdl.type != SDL_EVENT_MOUSE_BUTTON_UP) ||
+        sdl.button.button != SDL_BUTTON_LEFT) return;
+
+    const Vector2 point = selectorMousePosition(sdl.button.x, sdl.button.y, sdl.button.windowID);
+    const float arrowWidth = (std::min)(dimensions.y, dimensions.x / 3.0f);
+    const float centerLeft = position.x + arrowWidth;
+    const float centerRight = position.x + dimensions.x - arrowWidth;
+    const float middle = position.x + dimensions.x * 0.5f;
+    const bool inCenter = point.x >= centerLeft && point.x < centerRight &&
+        point.y >= position.y && point.y < position.y + dimensions.y;
+
+    if (sdl.type == SDL_EVENT_MOUSE_BUTTON_DOWN) {
+        pressedDirection = inCenter ? (point.x < middle ? -1 : 1) : 0;
+        return;
+    }
+
+    const int direction = pressedDirection;
+    pressedDirection = 0;
+    if (!inCenter || direction == 0 || (point.x < middle ? -1 : 1) != direction) return;
+    if (direction < 0) previous();
+    else next();
+}
 bool Selector::render() {
     error.clear();
     if (dimensions.x == 0 || dimensions.y == 0) return true;

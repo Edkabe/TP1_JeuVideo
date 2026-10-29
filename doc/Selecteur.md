@@ -28,5 +28,6 @@ La scene conserve le `shared_ptr<Selector>` ; le gestionnaire conserve une refer
 - Le pointeur de `getSelectedItem()` est emprunte : ne pas le conserver apres remplacement de la liste ou destruction du selecteur.
 - Position/dimensions non finies et dimensions negatives refusees. Une dimension nulle rend le controle invisible et ses boutons non cliquables.
 - Le texte est recentre apres changement de selection, police ou geometrie et a chaque rendu. Les elements longs ne sont pas tronques automatiquement ; choisir une largeur adaptee.
-- Les couleurs de texte et de boutons sont configurables. Les clics et survols reutilisent le comportement de `Button`.
+- Les couleurs de texte et de boutons sont configurables. Les flèches précédent/suivant réutilisent le comportement de `Button`.
+  Un clic maintenu puis relâché dans la moitié correspondante de la zone centrale sélectionne aussi l'élément précédent ou suivant.
 - Detruire/liberer le selecteur avant la fermeture du contexte OpenGL. `release()` libere son rendu et celui des boutons sans decharger la police partagee.

@@ -46,7 +46,7 @@ bool validLanguage(const std::string& value) {
            value.find('\0') == std::string::npos;
 }
 bool validResolution(int width, int height) {
-    return width >= 320 && width <= 16384 && height >= 200 && height <= 16384;
+    return width >= 320 && width <= 16384 && height >= 540 && height <= 16384;
 }
 bool validSensitivity(float value) {
     return std::isfinite(value) && value >= 0.01f && value <= 100.0f;

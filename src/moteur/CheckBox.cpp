@@ -116,8 +116,23 @@ void CheckBox::render(float viewportWidth, float viewportHeight) {
 
 bool CheckBox::handleEvent(const SDL_Event& event) {
     if (event.type != SDL_EVENT_MOUSE_BUTTON_DOWN || event.button.button != SDL_BUTTON_LEFT) return false;
-    const float mouseX = event.button.x;
-    const float mouseY = event.button.y;
+    float mouseX = event.button.x;
+    float mouseY = event.button.y;
+    // SDL fournit des coordonnées logiques; la case est dessinée en pixels
+    // du viewport, comme les autres contrôles interactifs.
+    SDL_Window* window = SDL_GetWindowFromID(event.button.windowID);
+    if (window && SDL_GL_GetCurrentContext()) {
+        int logicalWidth = 0, logicalHeight = 0, pixelWidth = 0, pixelHeight = 0;
+        if (SDL_GetWindowSize(window, &logicalWidth, &logicalHeight) &&
+            logicalWidth > 0 && logicalHeight > 0 &&
+            SDL_GetWindowSizeInPixels(window, &pixelWidth, &pixelHeight)) {
+            GLint viewport[4]{};
+            glGetIntegerv(GL_VIEWPORT, viewport);
+            mouseX = mouseX * pixelWidth / logicalWidth - viewport[0];
+            mouseY = mouseY * pixelHeight / logicalHeight -
+                (pixelHeight - viewport[1] - viewport[3]);
+        }
+    }
     if (mouseX < position[0] || mouseX > position[0] + size ||
         mouseY < position[1] || mouseY > position[1] + size) return false;
     checked = !checked;

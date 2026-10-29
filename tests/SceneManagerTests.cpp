@@ -1,5 +1,6 @@
 #include "moteur/SceneManager.h"
 #include "moteur/CheckBox.h"
+#include "moteur/Selector.h"
 #include <iostream>
 #include <memory>
 #include <stdexcept>
@@ -85,6 +86,27 @@ int main() {
         mouseEvent.button.button = SDL_BUTTON_RIGHT;
         manager.dispatchEvent(moteur::Event(mouseEvent));
         check(checkBox->isChecked(), "Clic droit ne change pas la case");
+
+        // Cliquer sur la valeur du selecteur navigue aussi, pas seulement sur les fleches.
+        moteur::Selector selector({}, {"Français", "English"});
+        selector.setPosition({100.0f, 100.0f});
+        selector.setDimensions({300.0f, 48.0f});
+        SDL_Event selectorClick{};
+        selectorClick.type = SDL_EVENT_MOUSE_BUTTON_DOWN;
+        selectorClick.button.button = SDL_BUTTON_LEFT;
+        selectorClick.button.x = 280.0f;
+        selectorClick.button.y = 124.0f;
+        selector.onEvent(moteur::Event(selectorClick));
+        selectorClick.type = SDL_EVENT_MOUSE_BUTTON_UP;
+        selector.onEvent(moteur::Event(selectorClick));
+        check(selector.getSelectedIndex() == 1, "Clic sur la valeur passe a l'option suivante");
+        selectorClick.type = SDL_EVENT_MOUSE_BUTTON_DOWN;
+        selectorClick.button.x = 200.0f;
+        selector.onEvent(moteur::Event(selectorClick));
+        selectorClick.type = SDL_EVENT_MOUSE_BUTTON_UP;
+        selector.onEvent(moteur::Event(selectorClick));
+        check(selector.getSelectedIndex() == 0, "Clic sur l'autre moitie passe a l'option precedente");
+
         manager.update(0.016f);
         manager.render();
         check(firstState->updates == 1 && firstState->renders == 1, "Mise a jour et rendu de la scene active");

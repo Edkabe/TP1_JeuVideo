@@ -45,6 +45,9 @@ bool Window::initialize(const std::string& title, int width, int height, bool hi
         (hidden ? SDL_WINDOW_HIDDEN : 0);
     window = SDL_CreateWindow(title.c_str(), width, height, flags);
     if (!window) { error = SDL_GetError(); return false; }
+    if (!SDL_SetWindowMinimumSize(window, 320, 540)) {
+        error = SDL_GetError(); close(); return false;
+    }
     windowedWidth = width;
     windowedHeight = height;
     context = SDL_GL_CreateContext(window);

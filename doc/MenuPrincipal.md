@@ -1,6 +1,6 @@
 # Scene Principale — issue #19
 
-`MainScene` utilise les controles et ressources du projet : `Image` pour l'arriere-plan, `Label` pour le titre et quatre `Button` pour Demarrer, Parametres, Credits et Quitter.
+`MainScene` utilise les controles et ressources du projet : `Image` pour l'arriere-plan, `Label` pour le titre et quatre `Button` pour Jeu, Parametres, Credits et Quitter.
 Elle suit l'interface `IScene` et le gestionnaire effectivement pousses par Oceane.
 
 ```cpp
@@ -35,10 +35,17 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\compiler-windows.p
 .\build\program.exe
 ```
 
-Demarrer ouvre `DemoGameScene`, une destination provisoire explicitement choisie avec Eddy. Elle affiche un titre, une barre de progression animee, le glisseur et un bouton Retour au menu ; aucun jeu complet n'est implemente.
-Parametres ouvre `SettingsScene`. Les choix sont initialises avec les valeurs actuelles ; Appliquer les enregistre puis revient au menu, tandis que Retour abandonne les changements.
+Jeu ouvre `DemoGameScene`, un mini-jeu de tir aux cibles chronométré. Déplace le viseur avec la souris et clique dans la cible pour marquer des points avant la fin du compte à rebours. Recommencer lance une nouvelle partie; Retour au menu ferme le jeu.
+Parametres ouvre `SettingsScene`. Les choix sont initialises avec les valeurs
+actuelles. **Appliquer** applique et enregistre les choix puis laisse l'écran
+ouvert pour permettre d'autres changements; **Retour** revient au menu.
+Les changements non appliques ne sont pas sauvegardes.
 Credits ouvre la vraie `CreditsScene`, avec retour au menu.
 
-L'enregistrement de la scene modifie le fichier `settings.bin`. L'application effective de la resolution, du plein ecran et de la VSync au moteur est suivie dans l'issue #23.
+La langue choisie traduit le menu, l'écran des paramètres, les crédits et le
+mini-jeu. La sensibilité multiplie le déplacement du viseur; le champ de vision
+change la taille apparente des cibles. L'application des paramètres modifie
+`settings.bin` et applique aussi à la fenêtre la résolution, le plein écran
+et la VSync choisis.
 
 Le triangle reste disponible avec `--triangle` ; `--smoke` conserve son test graphique automatique et `--check` la verification des dependances.

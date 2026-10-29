@@ -1,5 +1,6 @@
 #include "moteur/SettingsScene.h"
 #include "moteur/Engine.h"
+#include "moteur/Localization.h"
 #include <SDL3/SDL.h>
 #include <algorithm>
 #include <cmath>
@@ -77,18 +78,19 @@ bool SettingsScene::load() {
     }
 
     auto& settings = Engine::getInstance().getSettings();
+    const auto& languageCode = settings.getLanguage();
     const auto font = acquireFont();
     const auto texture = acquireBackground();
     if (!font || !texture) { unload(); return false; }
 
     background = std::make_unique<Image>(texture);
-    title = std::make_unique<Label>(font, "Paramètres");
+    title = std::make_unique<Label>(font, localized(languageCode, "Paramètres", "Settings"));
     status = std::make_unique<Label>(font);
     status->setColor({1.0f, 0.78f, 0.4f});
-    rowLabels[0] = std::make_unique<Label>(font, "Langue");
-    rowLabels[1] = std::make_unique<Label>(font, "Résolution");
-    rowLabels[2] = std::make_unique<Label>(font, "Plein écran");
-    rowLabels[3] = std::make_unique<Label>(font, "VSync");
+    rowLabels[0] = std::make_unique<Label>(font, localized(languageCode, "Langue", "Language"));
+    rowLabels[1] = std::make_unique<Label>(font, localized(languageCode, "Résolution", "Resolution"));
+    rowLabels[2] = std::make_unique<Label>(font, localized(languageCode, "Plein écran", "Fullscreen"));
+    rowLabels[3] = std::make_unique<Label>(font, localized(languageCode, "VSync", "VSync"));
     rowLabels[4] = std::make_unique<Label>(font);
     rowLabels[5] = std::make_unique<Label>(font);
 
@@ -142,8 +144,8 @@ bool SettingsScene::load() {
         slider->setHoverColor({0.20f, 0.72f, 0.96f, 1.0f});
     }
 
-    applyButton = std::make_shared<Button>(font, "Appliquer");
-    backButton = std::make_shared<Button>(font, "Retour");
+    applyButton = std::make_shared<Button>(font, localized(languageCode, "Appliquer", "Apply"));
+    backButton = std::make_shared<Button>(font, localized(languageCode, "Retour", "Back"));
     for (const auto& button : {applyButton, backButton}) {
         button->setBorderColor({0.22f, 0.5f, 0.64f});
         button->setBackgroundColor({0.06f, 0.13f, 0.21f, 0.96f});
@@ -223,8 +225,11 @@ void SettingsScene::layout(int width, int height) {
 
 void SettingsScene::refreshValueLabels() {
     if (!rowLabels[4] || !rowLabels[5]) return;
-    const auto sensitivityText = "Sensibilité : " + formatValue(sensitivity->getValue(), 2);
-    const auto fovText = "Champ de vision : " + formatValue(fov->getValue(), 0) + "°";
+    const auto& languageCode = Engine::getInstance().getSettings().getLanguage();
+    const auto sensitivityText = std::string(localized(languageCode, "Sensibilité : ", "Sensitivity: ")) +
+        formatValue(sensitivity->getValue(), 2);
+    const auto fovText = std::string(localized(languageCode, "Champ de vision : ", "Field of view: ")) +
+        formatValue(fov->getValue(), 0) + "°";
     if (rowLabels[4]->getText() != sensitivityText) rowLabels[4]->setText(sensitivityText);
     if (rowLabels[5]->getText() != fovText) rowLabels[5]->setText(fovText);
 }
@@ -254,7 +259,9 @@ void SettingsScene::applyChanges() {
         !settings.setSensitivity(sensitivity->getValue()) ||
         !settings.setFov(fov->getValue())) {
         error = "Une valeur de parametre selectionnee est invalide.";
-        status->setText(error);
+        status->setText(localized(settings.getLanguage(),
+                                  "Une valeur de paramètre est invalide.",
+                                  "A selected setting is invalid."));
         return;
     }
     settings.setFullscreen(fullscreen->isChecked());
@@ -276,7 +283,9 @@ void SettingsScene::applyChanges() {
         const std::string applyError = error;
         if (!engine.applySettings()) error += " | Restauration de l'affichage impossible : " + engine.getError();
         else error = applyError;
-        status->setText("Application impossible : " + error);
+        status->setText(std::string(localized(settings.getLanguage(),
+                                              "Application impossible : ",
+                                              "Could not apply settings: ")) + error);
         return;
     }
     if (!settings.save()) {
@@ -290,18 +299,37 @@ void SettingsScene::applyChanges() {
         // Si l'ecriture echoue, restaurer aussi les reglages effectivement appliques.
         const std::string saveError = error;
         if (!engine.applySettings()) error += " | Restauration de l'affichage impossible : " + engine.getError();
-        status->setText("Échec de l'enregistrement : " + saveError);
+        status->setText(std::string(localized(settings.getLanguage(),
+                                              "Échec de l'enregistrement : ",
+                                              "Could not save settings: ")) + saveError);
         return;
     }
     error.clear();
-    status->setText("Paramètres enregistrés.");
-    returnToMenu();
+    refreshLanguageTexts();
+    refreshValueLabels();
+    status->setText(localized(settings.getLanguage(),
+                              "Paramètres enregistrés et appliqués.",
+                              "Settings applied and saved."));
+}
+
+void SettingsScene::refreshLanguageTexts() {
+    if (!title) return;
+    const auto& languageCode = Engine::getInstance().getSettings().getLanguage();
+    title->setText(localized(languageCode, "Paramètres", "Settings"));
+    rowLabels[0]->setText(localized(languageCode, "Langue", "Language"));
+    rowLabels[1]->setText(localized(languageCode, "Résolution", "Resolution"));
+    rowLabels[2]->setText(localized(languageCode, "Plein écran", "Fullscreen"));
+    rowLabels[3]->setText(localized(languageCode, "VSync", "VSync"));
+    applyButton->setTitle(localized(languageCode, "Appliquer", "Apply"));
+    backButton->setTitle(localized(languageCode, "Retour", "Back"));
 }
 
 void SettingsScene::returnToMenu() {
     if (!scenes.setActiveScene(returnScene)) {
         error = scenes.getError();
-        if (status) status->setText("Impossible de revenir au menu.");
+        if (status) status->setText(localized(Engine::getInstance().getSettings().getLanguage(),
+                                             "Impossible de revenir au menu.",
+                                             "Could not return to the menu."));
     }
 }
 

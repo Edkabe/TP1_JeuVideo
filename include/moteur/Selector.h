@@ -42,6 +42,8 @@ private:
     Vector2 position{}, dimensions{300, 48};
     Label label;
     Button previousButton, nextButton;
+    // Direction choisie dans la zone centrale, en attente du relachement du clic.
+    int pressedDirection = 0;
     std::string error;
 };
 }

@@ -26,5 +26,5 @@ Les dépendances déjà fournies sont réutilisées, sans vcpkg.
 
 ## Menu principal
 
-Apres compilation, lancer `build/program.exe` pour ouvrir le menu, la demonstration provisoire, les parametres ou les credits.
+Apres compilation, lancer `build/program.exe` pour ouvrir le menu, le mini-jeu de tir aux cibles, les parametres ou les credits. Les menus sont disponibles en français et en anglais; la sensibilité règle la vitesse du viseur et le champ de vision ajuste la taille apparente des cibles.
 Voir [les commandes et le fonctionnement](doc/MenuPrincipal.md) ainsi que le [guide de validation](doc/Integration.md). Le triangle reste accessible avec `--triangle` et son test avec `--smoke`.

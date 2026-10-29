@@ -4,6 +4,7 @@
 #include "moteur/DemoGameScene.h"
 #include "moteur/SettingsScene.h"
 #include <SDL3/SDL.h>
+#include <cmath>
 #include <filesystem>
 #include <iostream>
 #include <memory>
@@ -20,6 +21,7 @@ void check(bool condition, const char* message) {
 void click(moteur::SceneManager& scenes, float x, float y) {
     SDL_Event event{};
     event.type = SDL_EVENT_MOUSE_MOTION;
+    event.motion.windowID = moteur::Engine::getInstance().getWindow().getId();
     event.motion.x = x;
     event.motion.y = y;
     scenes.dispatchEvent(moteur::Event(event));
@@ -27,6 +29,7 @@ void click(moteur::SceneManager& scenes, float x, float y) {
     event = {};
     event.type = SDL_EVENT_MOUSE_BUTTON_DOWN;
     event.button.button = SDL_BUTTON_LEFT;
+    event.button.windowID = moteur::Engine::getInstance().getWindow().getId();
     event.button.x = x;
     event.button.y = y;
     scenes.dispatchEvent(moteur::Event(event));
@@ -51,6 +54,14 @@ void openFromMenu(moteur::MainScene& menu, moteur::MainScene::Action action,
 int main() {
     try {
         auto& engine = moteur::Engine::getInstance();
+        auto& preferences = engine.getSettings();
+        check(preferences.setLanguage("fr") && preferences.setResolution(960, 540),
+              "Preparation de valeurs de depart connues pour les parametres");
+        preferences.setFullscreen(false);
+        preferences.setVSync(true);
+        preferences.setSensitivity(1.0f);
+        preferences.setFov(90.0f);
+        check(preferences.save(), "Sauvegarde des valeurs de depart des parametres");
         check(engine.initialize("Tests integration TP1", 960, 540, true), "Initialisation du moteur cache");
 
         const char* base = SDL_GetBasePath();
@@ -79,18 +90,67 @@ int main() {
 
         openFromMenu(*menuView, moteur::MainScene::Action::Settings, "parametres", scenes);
         check(settingsView->isLoaded(), "Chargement des controles de parametres");
-        click(scenes, 583.0f, 486.0f); // Bouton Retour dans la disposition 960 x 540.
-        check(scenes.getActiveSceneName() == "menu" && menuView->isLoaded(), "Retour des parametres au menu");
+        click(scenes, 480.0f, 113.0f); // Valeur du selecteur de langue.
+        click(scenes, 480.0f, 183.0f); // Valeur du selecteur de resolution.
+        click(scenes, 362.0f, 276.0f); // Case VSync dans la disposition 960 x 540.
+        click(scenes, 377.0f, 486.0f); // Appliquer dans la disposition 960 x 540.
+        int appliedWidth = 0, appliedHeight = 0;
+        check(preferences.getLanguage() == "en", "La langue choisie est appliquee au clic sur Appliquer");
+        check(preferences.getWidth() == 1280 && preferences.getHeight() == 720 &&
+              engine.getWindow().getSize(appliedWidth, appliedHeight) &&
+              appliedWidth == 1280 && appliedHeight == 720,
+              "La resolution choisie change la fenetre au clic sur Appliquer");
+        check(!preferences.isVSyncEnabled() && !engine.getWindow().isVSyncEnabled(),
+              "Le clic sur la case VSync applique aussi le changement a la fenetre");
+        check(scenes.getActiveSceneName() == "parametres", "Appliquer garde l'ecran ouvert avec son retour visible");
+        check(preferences.setResolution(960, 540), "Restauration de la resolution apres le test des controles");
+        preferences.setVSync(true);
+        check(engine.applySettings() && preferences.save(), "Restauration de l'affichage apres le test des controles");
+        check(scenes.setActiveScene("menu") && menuView->isLoaded(), "Retour des parametres au menu");
+        check(menuView->getButton(moteur::MainScene::Action::Settings)->getLabel().getText() == "Settings" &&
+              menuView->getButton(moteur::MainScene::Action::Start)->getLabel().getText() == "Play",
+              "Le menu se traduit en anglais apres application de la langue");
 
         openFromMenu(*menuView, moteur::MainScene::Action::Credits, "credits", scenes);
         check(creditsView->isLoaded(), "Chargement des credits");
         click(scenes, 480.0f, 492.0f); // Bouton Retour au menu des credits.
         check(scenes.getActiveSceneName() == "menu" && menuView->isLoaded(), "Retour des credits au menu");
 
+        preferences.setSensitivity(2.0f);
+        preferences.setFov(120.0f);
         openFromMenu(*menuView, moteur::MainScene::Action::Start, "demonstration", scenes);
-        check(demoView->isLoaded(), "Chargement de la demonstration et de son glisseur");
+        check(demoView->isLoaded(), "Chargement du jeu de tir aux cibles");
+        scenes.render();
+        check(demoView->getError().empty(), "Rendu OpenGL du jeu et de ses controles");
+        check(demoView->getTargetDimensions().x < 88.0f,
+              "Un champ de vision plus large reduit la taille apparente de la cible");
+        const auto reticleStart = demoView->getReticlePosition();
+        const auto targetPosition = demoView->getTargetPosition();
+        const auto targetSize = demoView->getTargetDimensions();
+        SDL_Event aim{};
+        aim.type = SDL_EVENT_MOUSE_MOTION;
+        aim.motion.windowID = engine.getWindow().getId();
+        aim.motion.xrel = static_cast<float>((targetPosition.x + targetSize.x * 0.5f - reticleStart.x) / 2.0f);
+        aim.motion.yrel = static_cast<float>((targetPosition.y + targetSize.y * 0.5f - reticleStart.y) / 2.0f);
+        scenes.dispatchEvent(moteur::Event(aim));
+        const auto aimedPosition = demoView->getReticlePosition();
+        check(std::abs((aimedPosition.x - reticleStart.x) - aim.motion.xrel * 2.0f) < 0.01f,
+              "La sensibilite multiplie le deplacement du viseur");
+        SDL_Event fire{};
+        fire.type = SDL_EVENT_MOUSE_BUTTON_DOWN;
+        fire.button.windowID = engine.getWindow().getId();
+        fire.button.button = SDL_BUTTON_LEFT;
+        scenes.dispatchEvent(moteur::Event(fire));
+        check(demoView->getScore() == 1, "Un clic du viseur sur la cible augmente le score");
+        demoView->update(30.0f);
+        check(demoView->getTimeRemaining() == 0.0f, "Le compte a rebours termine la partie");
+        click(demoView->getRestartButton(), scenes);
+        check(demoView->getScore() == 0 && demoView->getTimeRemaining() == 30.0f,
+              "Recommencer lance une nouvelle partie");
         click(demoView->getReturnButton(), scenes);
         check(scenes.getActiveSceneName() == "menu" && menuView->isLoaded(), "Retour de la demonstration au menu");
+        check(preferences.setSensitivity(1.0f) && preferences.setFov(90.0f) && preferences.save(),
+              "Restauration de la sensibilite et du champ de vision apres le test");
 
         const auto resourceCount = engine.getResourceManager().size();
         openFromMenu(*menuView, moteur::MainScene::Action::Settings, "parametres", scenes);

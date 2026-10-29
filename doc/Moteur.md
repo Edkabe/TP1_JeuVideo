@@ -1,4 +1,4 @@
-# Classes adaptées de l'atelier 2
+# Moteur et classes adaptées de l'atelier 2
 
 Les en-têtes sont dans `include/moteur/`, les implémentations dans
 `src/moteur/`. Ils sont regroupés dans `build/lib/moteur.lib`.
@@ -6,7 +6,7 @@ Les en-têtes sont dans `include/moteur/`, les implémentations dans
 | Classe | Responsabilité |
 | --- | --- |
 | Engine | Singleton, fenêtre unique, initialisation SDL, boucle avec deltaTime et arrêt. |
-| Window | Fenêtre SDL3 et contexte OpenGL 3.3 Core, chargement GLAD et dimensions en pixels. |
+| Window | Fenêtre SDL3 redimensionnable (minimum 320 × 540), contexte OpenGL 3.3 Core, chargement GLAD et dimensions en pixels. |
 | Shader | Compilation depuis un fichier ou une chaîne et journal d'erreur. |
 | VertexShader | Spécialisation pour GL_VERTEX_SHADER. |
 | Program | Liaison des nuanceurs et activation du programme. |
@@ -15,27 +15,27 @@ Les en-têtes sont dans `include/moteur/`, les implémentations dans
 
 Les propriétaires d'identifiants OpenGL ne sont pas copiables. Détruire leurs
 instances **avant `Engine::shutdown()`**, sur le thread du contexte actif.
-Le programme de démonstration respecte cet ordre.
+Les scènes sont vidées avant l'arrêt du moteur afin de libérer leurs contrôles
+graphiques pendant que le contexte existe encore.
 
 Après compilation depuis VS Code (**Ctrl+Maj+B**), lancer `build/program.exe`
-pour afficher le triangle orange. Échap ou la croix arrête la boucle.
-Les sources GLSL sont copiées depuis `assets/shaders` à côté de l'application;
-aucune macro CMake n'est nécessaire pour les retrouver.
+pour ouvrir le menu principal. `--triangle` lance la démonstration OpenGL
+historique; Échap ou la croix arrête sa boucle. Les sources GLSL sont copiées
+depuis `assets/shaders` à côté de l'application.
 
 `--check` vérifie la liaison des dépendances. `--smoke` crée une fenêtre
 masquée et vérifie les erreurs de nuanceur/liaison, la propriété et le
 transfert des VBO/VAO, la capture du VBO par le VAO, la protection contre une
 boucle réentrante et le rendu du triangle alimenté par un VBO.
 
-Les paramètres, scènes, gestionnaires, contrôles et programmes binaires
-restent des étapes ultérieures. Voir [la compilation Windows](Bibliotheques.md).
+Le moteur inclut les paramètres persistants, les ressources titrées, les
+scènes et leurs événements, les contrôles visuels ainsi que le cache binaire
+des programmes. Voir la [documentation des classes](Classes.md), le
+[fonctionnement du menu](MenuPrincipal.md), la [validation d'intégration](Integration.md)
+et la [compilation Windows](Bibliotheques.md).
 
 ## Diagramme de classes
 
-Le diagramme distingue en bleu les classes déjà présentes dans la version
-d'Eddy et en vert les classes proposées pour compléter le TP. Le SVG est la
-version vectorielle éditable; le PNG sert d'aperçu.
-
-[Ouvrir le diagramme éditable](Classes.svg) · [Ouvrir l'aperçu PNG](Classes.png)
-
-L'ancien diagramme UMLet a été conservé sous le nom [Classes-initiale.uxf](Classes-initiale.uxf).
+Le [diagramme à jour](Classes.md) présente les classes implémentées et leurs
+relations. L'ancien diagramme UMLet est conservé sous le nom
+[Classes-initiale.uxf](Classes-initiale.uxf).

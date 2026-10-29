@@ -35,6 +35,7 @@ private:
     std::shared_ptr<Font> acquireFont();
     std::shared_ptr<Texture> acquireBackground();
     void layout(int width, int height);
+    void refreshLanguageTexts();
     void refreshValueLabels();
     void applyChanges();
     void returnToMenu();

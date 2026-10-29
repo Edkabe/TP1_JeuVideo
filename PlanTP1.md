@@ -4,7 +4,7 @@
 
 Le TP1 consiste à faire évoluer l’atelier d’Eddy en un moteur graphique orienté objet, mono-fenêtre, puis à construire les contrôles et les trois scènes demandés dans [`enonce.md`](enonce.md).
 
-Règle de portée : implémenter seulement ce que l’énoncé demande et réutiliser seulement les notions vues au cours. Chaque étape sera expliquée et validée avec l’équipe avant de passer à la suivante. Ce document est un plan; il ne constitue pas une autorisation de générer le code des étapes suivantes.
+Règle de portée : implémenter seulement ce que l’énoncé demande et réutiliser seulement les notions vues au cours. Ce document conserve le plan initial et les issues qui ont guidé le travail; l’état réel du dépôt et les vérifications à jour se trouvent dans le README et [`doc/Integration.md`](doc/Integration.md).
 
 ## Point de départ : l’atelier
 
@@ -25,7 +25,7 @@ Adaptations nécessaires au TP :
 
 L’archive contient aussi des fichiers générés par Visual Studio (`.vs`, sorties `x64/Debug`) et des chemins de dépendances propres au poste d’Eddy. Ils ne doivent pas devenir des sources du TP; la structure de travail propre sera décidée avant leur copie ou leur retrait. Le projet Git actuel ne remplace pas l’atelier : il fournit une démonstration de liaison et les dépendances prêtes à l’emploi. La compilation souhaitée se fera dans VS Code avec une tâche qui appelle directement MSVC, sur le modèle d’Atelier3; CMake ne sera pas utilisé.
 
-## Étapes proposées
+## Étapes du plan initial
 
 ### Étape 0 — Valider la base et l’organisation
 
@@ -114,7 +114,7 @@ Intégration, documentation et remise
 
 Les contrôles dépendent du rendu et des ressources; les scènes dépendent des contrôles, des paramètres et du gestionnaire de scènes. On ne commence donc pas les scènes finales avant d’avoir validé leurs fondations.
 
-## Point de validation avant tout code
+## Points de validation du plan initial
 
 Avant de commencer l’étape suivante, les deux membres devraient pouvoir expliquer avec leurs mots :
 
@@ -124,4 +124,7 @@ Avant de commencer l’étape suivante, les deux membres devraient pouvoir expli
 4. qui prend en charge chaque issue, notamment les issues sans responsable nommé;
 5. ce qui est explicitement hors portée pour respecter « seulement le strict nécessaire ».
 
-**Prochaine étape proposée :** relire ce plan ensemble, décider de la répartition des issues #2 à #5, puis valider une copie de travail propre de l’atelier avant toute modification de code.
+Ces points décrivent les décisions de départ. Les étapes d'architecture,
+d'implémentation et d'intégration sont maintenant présentes dans la branche
+`integration`; la validation automatisée et les contrôles manuels restants
+sont décrits dans [`doc/Integration.md`](doc/Integration.md).

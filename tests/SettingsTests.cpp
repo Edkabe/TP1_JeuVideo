@@ -34,6 +34,8 @@ int main() {
             initial.setVSync(false);
             check(initial.setSensitivity(2.25f) && initial.setFov(105.0f), "Modification sensibilite et FOV");
             check(!initial.setResolution(0, 1080) && initial.getWidth() == 1920, "Resolution invalide refusee");
+            check(!initial.setResolution(320, 200) && initial.getHeight() == 1080,
+                  "Resolution trop basse pour l'interface refusee");
             check(!initial.setSensitivity(std::nanf("")) && initial.getSensitivity() == 2.25f,
                   "Sensibilite non finie refusee");
             check(!initial.setFov(180.0f) && initial.getFov() == 105.0f, "FOV invalide refuse");

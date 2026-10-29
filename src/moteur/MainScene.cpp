@@ -1,5 +1,6 @@
 #include "moteur/MainScene.h"
 #include "moteur/Engine.h"
+#include "moteur/Localization.h"
 #include <SDL3/SDL.h>
 #include <algorithm>
 
@@ -40,11 +41,15 @@ bool MainScene::load() {
     if (!texture) return false;
     const auto titleFont = acquireFont(36),bodyFont = acquireFont(22);
     if (!titleFont || !bodyFont) return false;
+    const auto& language = Engine::getInstance().getSettings().getLanguage();
     background = std::make_unique<Image>(texture);
-    title = std::make_unique<Label>(titleFont,"TP1 - Moteur graphique");
+    title = std::make_unique<Label>(titleFont,localized(language,"TP1 - Moteur graphique","TP1 - Graphics engine"));
     status = std::make_unique<Label>(bodyFont);
     status->setColor({1,.78f,.4f});
-    const char* captions[] = {"Démarrer","Paramètres","Crédits","Quitter"};
+    const char* captions[] = {
+        localized(language,"Jeu","Play"), localized(language,"Paramètres","Settings"),
+        localized(language,"Crédits","Credits"), localized(language,"Quitter","Quit")
+    };
     for (size_t i = 0; i < buttons.size(); ++i) {
         buttons[i] = std::make_shared<Button>(bodyFont,captions[i]);
         buttons[i]->setBorderColor({.22f,.5f,.64f});
@@ -71,12 +76,16 @@ void MainScene::navigate(const std::string& destination) {
     const std::string name = destination;
     if (name.empty() || !scenes.hasScene(name)) {
         error = "Scene de destination non disponible : " + name;
-        if (status) status->setText("Cet écran n'est pas encore disponible.");
+        if (status) status->setText(localized(Engine::getInstance().getSettings().getLanguage(),
+                                             "Cet écran n'est pas encore disponible.",
+                                             "This screen is not available yet."));
         return;
     }
     if (!scenes.setActiveScene(name)) {
         error = scenes.getError();
-        if (status) status->setText("Impossible d'ouvrir cet écran.");
+        if (status) status->setText(localized(Engine::getInstance().getSettings().getLanguage(),
+                                             "Impossible d'ouvrir cet écran.",
+                                             "Could not open this screen."));
     }
 }
 void MainScene::layout(int width,int height) {
