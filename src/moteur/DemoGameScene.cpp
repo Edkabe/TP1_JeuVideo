@@ -32,7 +32,7 @@ bool DemoGameScene::load() {
     auto& engine = Engine::getInstance();
     auto& resources = engine.getResourceManager();
     const auto language = engine.getSettings().getLanguage();
-    const auto key = "game:font:" + fontFile.u8string();
+    const auto key = "shared:font:24:" + fontFile.u8string();
     auto font = resources.get<Font>(key);
     if (!font && resources.contains(key)) { error = "Nom de police utilise par une autre ressource."; return false; }
     if (!font) font = std::make_shared<Font>(24.0f, key);
@@ -69,7 +69,10 @@ bool DemoGameScene::load() {
     }
 
     int width = 0, height = 0;
-    engine.getWindow().getPixelSize(width, height);
+    if (!engine.getWindow().getPixelSize(width, height) || width <= 0 || height <= 0) {
+        error = SDL_GetError(); if (error.empty()) error = "Dimensions de fenetre indisponibles.";
+        unload(); return false;
+    }
     loaded = true;
     loadingTime = 0.0f;
     loadingComplete = false;
@@ -106,7 +109,7 @@ void DemoGameScene::render() {
     if (!loaded) return;
     auto& engine = Engine::getInstance();
     int width = 0, height = 0;
-    if (!engine.getWindow().getPixelSize(width, height)) { error = SDL_GetError(); engine.stop(); return; }
+    if (!engine.getWindow().getPixelSize(width, height)) { error = SDL_GetError(); engine.reportError(error); return; }
     if (width <= 0 || height <= 0) return;
     glViewport(0, 0, width, height);
     glClearColor(0.035f, 0.12f, 0.14f, 1.0f);
@@ -120,7 +123,7 @@ void DemoGameScene::render() {
     else if (!progress->render()) error = progress->getError();
     else if (!back->render()) error = back->getError();
     else return;
-    engine.stop();
+    engine.reportError(error);
 }
 
 void DemoGameScene::unload() {

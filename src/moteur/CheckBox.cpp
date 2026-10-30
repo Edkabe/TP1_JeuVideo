@@ -4,6 +4,33 @@
 #include <cmath>
 
 namespace moteur {
+namespace {
+struct BufferVertexState {
+    GLint vao = 0, arrayBuffer = 0;
+    BufferVertexState() {
+        glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &vao);
+        glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &arrayBuffer);
+    }
+    ~BufferVertexState() {
+        glBindVertexArray(static_cast<GLuint>(vao));
+        glBindBuffer(GL_ARRAY_BUFFER, static_cast<GLuint>(arrayBuffer));
+    }
+};
+struct ProgramVertexState {
+    GLint program = 0, vao = 0, arrayBuffer = 0;
+    ProgramVertexState() {
+        glGetIntegerv(GL_CURRENT_PROGRAM, &program);
+        glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &vao);
+        glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &arrayBuffer);
+    }
+    ~ProgramVertexState() {
+        glBindVertexArray(static_cast<GLuint>(vao));
+        glBindBuffer(GL_ARRAY_BUFFER, static_cast<GLuint>(arrayBuffer));
+        glUseProgram(static_cast<GLuint>(program));
+    }
+};
+}
+
 bool CheckBox::initialize() {
     error.clear();
     if (initialized) return true;
@@ -23,13 +50,12 @@ bool CheckBox::initialize() {
         return false;
     }
 
+    BufferVertexState previous;
     vao.bind();
     vbo.bind();
     vbo.setData(nullptr, static_cast<GLsizeiptr>(sizeof(Vertex) * 42), GL_DYNAMIC_DRAW);
     vao.setAttribute(0, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), 0);
     vao.setAttribute(1, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), 2 * sizeof(float));
-    VAO::unbind();
-    VBO::unbind();
     initialized = true;
     return true;
 }
@@ -84,13 +110,12 @@ void CheckBox::render(float viewportWidth, float viewportHeight) {
                 size * 0.11f, checkColor, vertices, count);
     }
 
+    ProgramVertexState previous;
     program.use();
     glUniform2f(resolutionLocation, viewportWidth, viewportHeight);
     vao.bind();
     vbo.setData(vertices.data(), static_cast<GLsizeiptr>(sizeof(Vertex) * count));
     glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(count));
-    VAO::unbind();
-    Program::unuse();
 }
 
 bool CheckBox::handleEvent(const SDL_Event& event) {

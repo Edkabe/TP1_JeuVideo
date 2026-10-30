@@ -12,6 +12,16 @@
 namespace {
 int checks = 0;
 
+class FailingUpdateScene final : public moteur::IScene {
+public:
+    bool load() override { return true; }
+    void unload() override {}
+    void update(float) override { error = "Erreur de mise a jour propagee."; }
+    const std::string& getError() const override { return error; }
+private:
+    std::string error;
+};
+
 void check(bool condition, const char* message) {
     ++checks;
     if (!condition) throw std::runtime_error(message);
@@ -86,9 +96,15 @@ int main() {
         check(scenes.addScene("credits", std::move(credits)), "Ajout des credits");
         check(scenes.addScene("parametres", std::move(settings)), "Ajout des parametres");
         check(scenes.setActiveScene("menu") && menuView->isLoaded(), "Chargement initial du menu");
+        const auto mainFont = menuView->getSharedFont();
+        const auto mainBackground = menuView->getSharedBackground();
 
         openFromMenu(*menuView, moteur::MainScene::Action::Settings, "parametres", scenes);
         check(settingsView->isLoaded(), "Chargement des controles de parametres");
+        check(settingsView->getSharedFont() == mainFont,
+              "Le menu et les parametres partagent exactement le meme objet Font");
+        check(settingsView->getSharedBackground() == mainBackground,
+              "Le menu et les parametres partagent exactement le meme objet Texture");
         click(scenes, 480.0f, 113.0f); // Valeur du selecteur de langue.
         click(scenes, 480.0f, 183.0f); // Valeur du selecteur de resolution.
         click(scenes, 362.0f, 276.0f); // Case VSync dans la disposition 960 x 540.
@@ -141,6 +157,12 @@ int main() {
               "Les ressources partagees sont reutilisees apres des transitions repetees");
 
         scenes.clear();
+        moteur::SceneManager failingScenes;
+        check(failingScenes.addScene("erreur", std::make_unique<FailingUpdateScene>()) &&
+              failingScenes.setActiveScene("erreur"), "Preparation d'une scene dont update echoue");
+        check(!engine.run(failingScenes) && engine.getError() == "Erreur de mise a jour propagee.",
+              "Engine::run transmet au code appelant l'erreur d'une scene");
+        failingScenes.clear();
         check(engine.shutdown(), "Fermeture propre apres dechargement de toutes les scenes");
         std::cout << checks << " verifications d'integration reussies.\n";
         return 0;

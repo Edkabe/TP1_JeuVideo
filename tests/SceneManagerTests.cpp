@@ -24,12 +24,14 @@ struct SceneProbe {
 class TestScene final : public moteur::IScene {
 public:
     explicit TestScene(std::shared_ptr<SceneProbe> state) : state(std::move(state)) {}
-    bool load() override { ++state->loads; return state->loadSucceeds; }
+    bool load() override { ++state->loads; if (!state->loadSucceeds) error = "Diagnostic load conserve."; return state->loadSucceeds; }
     void unload() override { ++state->unloads; }
     void update(float) override { ++state->updates; }
     void render() override { ++state->renders; }
+    const std::string& getError() const override { return error; }
 private:
     std::shared_ptr<SceneProbe> state;
+    std::string error;
 };
 
 class TestObserver final : public moteur::EventObserver {
@@ -119,6 +121,7 @@ int main() {
         failedState->loadSucceeds = false;
         check(manager.addScene("echouee", std::make_unique<TestScene>(failedState)), "Ajout de la scene de test");
         check(!manager.setActiveScene("echouee"), "Echec de chargement signale");
+        check(manager.getError() == "Diagnostic load conserve.", "Le diagnostic du load remonte au gestionnaire");
         check(manager.getActiveScene() == firstPointer && firstState->unloads == 0,
               "La scene courante reste active apres un echec");
         check(failedState->loads == 1 && failedState->unloads == 1,

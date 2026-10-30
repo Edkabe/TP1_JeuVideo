@@ -10,7 +10,7 @@ CreditsScene::CreditsScene(SceneManager& manager,std::filesystem::path file,std:
 
 std::shared_ptr<Font> CreditsScene::acquireFont(float size) {
     auto& resources = Engine::getInstance().getResourceManager();
-    const std::string key = "credits:font:" + std::to_string(size) + ":" + fontFile.u8string();
+    const std::string key = "shared:font:" + std::to_string(size) + ":" + fontFile.u8string();
     auto font = resources.get<Font>(key);
     if (!font && resources.contains(key)) { error = "Le nom de la police est utilise par une autre ressource."; return {}; }
     if (font && font->isLoaded()) return font;
@@ -46,7 +46,10 @@ bool CreditsScene::load() {
         }
     }
     int width = 0,height = 0;
-    Engine::getInstance().getWindow().getPixelSize(width,height);
+    if (!Engine::getInstance().getWindow().getPixelSize(width,height) || width <= 0 || height <= 0) {
+        error = SDL_GetError(); if (error.empty()) error = "Dimensions de fenetre indisponibles.";
+        unload(); return false;
+    }
     layout(width,height);
     loaded = true;
     return true;
@@ -69,15 +72,15 @@ void CreditsScene::render() {
     if (!loaded) return;
     int width = 0,height = 0;
     auto& engine = Engine::getInstance();
-    if (!engine.getWindow().getPixelSize(width,height)) { error = SDL_GetError(); engine.stop(); return; }
+    if (!engine.getWindow().getPixelSize(width,height)) { error = SDL_GetError(); engine.reportError(error); return; }
     if (width <= 0 || height <= 0) return;
     glViewport(0,0,width,height); glClearColor(.035f,.055f,.09f,1); glClear(GL_COLOR_BUFFER_BIT);
     glDisable(GL_DEPTH_TEST); glDisable(GL_CULL_FACE); glBlendEquation(GL_FUNC_ADD);
     layout(width,height);
     for (const auto& label : labels) {
-        if (!label->render()) { error = label->getError(); engine.stop(); return; }
+        if (!label->render()) { error = label->getError(); engine.reportError(error); return; }
     }
-    if (!back->render()) { error = back->getError(); engine.stop(); }
+    if (!back->render()) { error = back->getError(); engine.reportError(error); }
 }
 void CreditsScene::unload() {
     getEventManager().removeObserver(back);

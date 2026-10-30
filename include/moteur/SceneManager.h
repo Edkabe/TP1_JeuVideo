@@ -24,6 +24,7 @@ public:
     const IScene* getActiveScene() const;
     const std::string& getActiveSceneName() const { return activeName; }
     const std::string& getError() const { return error; }
+    const std::string& getActiveSceneError() const;
     bool hasScene(const std::string& name) const;
 
     // Ces fonctions ne font rien lorsqu'aucune scène n'est active.

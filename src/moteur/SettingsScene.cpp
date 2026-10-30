@@ -31,7 +31,7 @@ SettingsScene::SettingsScene(SceneManager& manager, std::filesystem::path font,
 
 std::shared_ptr<Font> SettingsScene::acquireFont() {
     auto& resources = Engine::getInstance().getResourceManager();
-    const auto key = "settings:font:22:" + fontFile.u8string();
+    const auto key = "shared:font:" + std::to_string(22.0f) + ":" + fontFile.u8string();
     auto font = resources.get<Font>(key);
     if (!font && resources.contains(key)) {
         error = "Nom de police utilise par une autre ressource.";
@@ -51,7 +51,7 @@ std::shared_ptr<Font> SettingsScene::acquireFont() {
 
 std::shared_ptr<Texture> SettingsScene::acquireBackground() {
     auto& resources = Engine::getInstance().getResourceManager();
-    const auto key = "settings:background:" + backgroundFile.u8string();
+    const auto key = "shared:background:" + backgroundFile.u8string();
     auto texture = resources.get<Texture>(key);
     if (!texture && resources.contains(key)) {
         error = "Nom de texture utilise par une autre ressource.";
@@ -82,6 +82,8 @@ bool SettingsScene::load() {
     const auto font = acquireFont();
     const auto texture = acquireBackground();
     if (!font || !texture) { unload(); return false; }
+    sharedFont = font;
+    sharedBackground = texture;
 
     background = std::make_unique<Image>(texture);
     title = std::make_unique<Label>(font, localized(languageCode, "Paramètres", "Settings"));
@@ -133,10 +135,12 @@ bool SettingsScene::load() {
 
     sensitivity = std::make_shared<Slider>();
     fov = std::make_shared<Slider>();
-    sensitivity->setRange(0.01f, 100.0f, 0.01f);
-    sensitivity->setValue(settings.getSensitivity());
-    fov->setRange(30.0f, 120.0f, 1.0f);
-    fov->setValue(settings.getFov());
+    if (!sensitivity->setRange(0.01f, 100.0f, 0.01f) || !sensitivity->setValue(settings.getSensitivity()) ||
+        !fov->setRange(30.0f, 120.0f, 1.0f) || !fov->setValue(settings.getFov())) {
+        error = !sensitivity->getError().empty() ? sensitivity->getError() : fov->getError();
+        unload();
+        return false;
+    }
     for (const auto& slider : {sensitivity, fov}) {
         slider->setBorderColor({0.08f, 0.10f, 0.14f, 1.0f});
         slider->setBackgroundColor({0.82f, 0.85f, 0.90f, 1.0f});
@@ -169,9 +173,12 @@ bool SettingsScene::load() {
         }
     }
 
-    refreshValueLabels();
+    if (!refreshValueLabels()) { unload(); return false; }
     int width = 0, height = 0;
-    Engine::getInstance().getWindow().getPixelSize(width, height);
+    if (!Engine::getInstance().getWindow().getPixelSize(width, height) || width <= 0 || height <= 0) {
+        error = SDL_GetError(); if (error.empty()) error = "Dimensions de fenetre indisponibles.";
+        unload(); return false;
+    }
     layout(width, height);
     loaded = true;
     return true;
@@ -223,20 +230,25 @@ void SettingsScene::layout(int width, int height) {
     status->setPosition({(w - status->getDimensions().x) * 0.5f, h * 0.95f});
 }
 
-void SettingsScene::refreshValueLabels() {
-    if (!rowLabels[4] || !rowLabels[5]) return;
+bool SettingsScene::refreshValueLabels() {
+    if (!rowLabels[4] || !rowLabels[5]) return false;
     const auto& languageCode = Engine::getInstance().getSettings().getLanguage();
     const auto sensitivityText = std::string(localized(languageCode, "Sensibilité : ", "Sensitivity: ")) +
         formatValue(sensitivity->getValue(), 2);
     const auto fovText = std::string(localized(languageCode, "Champ de vision : ", "Field of view: ")) +
         formatValue(fov->getValue(), 0) + "°";
-    if (rowLabels[4]->getText() != sensitivityText) rowLabels[4]->setText(sensitivityText);
-    if (rowLabels[5]->getText() != fovText) rowLabels[5]->setText(fovText);
+    if (rowLabels[4]->getText() != sensitivityText && !rowLabels[4]->setText(sensitivityText)) {
+        error = rowLabels[4]->getError(); return false;
+    }
+    if (rowLabels[5]->getText() != fovText && !rowLabels[5]->setText(fovText)) {
+        error = rowLabels[5]->getError(); return false;
+    }
+    return true;
 }
 
 void SettingsScene::update(float deltaTime) {
     if (!loaded || !std::isfinite(deltaTime) || deltaTime < 0.0f) return;
-    refreshValueLabels();
+    if (!refreshValueLabels()) return;
 }
 
 void SettingsScene::applyChanges() {
@@ -305,23 +317,26 @@ void SettingsScene::applyChanges() {
         return;
     }
     error.clear();
-    refreshLanguageTexts();
-    refreshValueLabels();
+    if (!refreshLanguageTexts() || !refreshValueLabels()) return;
     status->setText(localized(settings.getLanguage(),
                               "Paramètres enregistrés et appliqués.",
                               "Settings applied and saved."));
 }
 
-void SettingsScene::refreshLanguageTexts() {
-    if (!title) return;
+bool SettingsScene::refreshLanguageTexts() {
+    if (!title) return false;
     const auto& languageCode = Engine::getInstance().getSettings().getLanguage();
-    title->setText(localized(languageCode, "Paramètres", "Settings"));
-    rowLabels[0]->setText(localized(languageCode, "Langue", "Language"));
-    rowLabels[1]->setText(localized(languageCode, "Résolution", "Resolution"));
-    rowLabels[2]->setText(localized(languageCode, "Plein écran", "Fullscreen"));
-    rowLabels[3]->setText(localized(languageCode, "VSync", "VSync"));
-    applyButton->setTitle(localized(languageCode, "Appliquer", "Apply"));
-    backButton->setTitle(localized(languageCode, "Retour", "Back"));
+    if (!title->setText(localized(languageCode, "Paramètres", "Settings")) ||
+        !rowLabels[0]->setText(localized(languageCode, "Langue", "Language")) ||
+        !rowLabels[1]->setText(localized(languageCode, "Résolution", "Resolution")) ||
+        !rowLabels[2]->setText(localized(languageCode, "Plein écran", "Fullscreen")) ||
+        !rowLabels[3]->setText(localized(languageCode, "VSync", "VSync")) ||
+        !applyButton->setTitle(localized(languageCode, "Appliquer", "Apply")) ||
+        !backButton->setTitle(localized(languageCode, "Retour", "Back"))) {
+        error = "Mise a jour des textes de l'ecran Parametres impossible.";
+        return false;
+    }
+    return true;
 }
 
 void SettingsScene::returnToMenu() {
@@ -339,7 +354,7 @@ void SettingsScene::render() {
     int width = 0, height = 0;
     if (!engine.getWindow().getPixelSize(width, height)) {
         error = SDL_GetError();
-        engine.stop();
+        engine.reportError(error);
         return;
     }
     if (width <= 0 || height <= 0) return;
@@ -368,7 +383,7 @@ void SettingsScene::render() {
         else if (!status->render()) error = status->getError();
         else return;
     }
-    engine.stop();
+    engine.reportError(error);
 }
 
 void SettingsScene::unload() {
@@ -395,6 +410,7 @@ void SettingsScene::unload() {
     if (vsync) vsync->release();
     fullscreen.reset(); vsync.reset(); sensitivity.reset(); fov.reset();
     background.reset(); status.reset(); title.reset();
+    sharedFont.reset(); sharedBackground.reset();
     for (auto& label : rowLabels) label.reset();
     languageCodes.clear();
     resolutions.clear();

@@ -19,6 +19,16 @@
 #include <utility>
 
 namespace {
+class ShutdownGuard {
+public:
+  explicit ShutdownGuard(moteur::Engine& value) : engine(value) {}
+  ~ShutdownGuard() { if (active) engine.shutdown(); }
+  bool shutdown() { active = false; return engine.shutdown(); }
+private:
+  moteur::Engine& engine;
+  bool active = true;
+};
+
 bool showMenu(moteur::Engine& engine) {
   const char* base = SDL_GetBasePath();
   const char* windows = SDL_getenv("WINDIR");
@@ -189,13 +199,18 @@ int main(int argc, char* argv[]) {
   const bool smoke = mode == "--smoke";
   const bool triangle = smoke || mode == "--triangle";
   auto& engine = moteur::Engine::getInstance();
+  if (!engine.getSettings().getError().empty())
+    std::cerr << "Paramètres: " << engine.getSettings().getError() << '\n';
   if (!engine.initialize(triangle ? "TP1 - Moteur : triangle" : "TP1 - Menu principal", 960, 540, smoke)) {
     std::cerr << engine.getError() << '\n'; return 1;
   }
+  ShutdownGuard shutdown(engine);
   bool success = false;
   try { success = triangle ? demonstrate(engine, smoke) : showMenu(engine); }
   catch (const std::exception& error) { std::cerr << error.what() << '\n'; }
-  if (!engine.shutdown()) { std::cerr << engine.getError() << '\n'; success = false; }
+  catch (...) { std::cerr << "Erreur inattendue pendant l'execution du moteur.\n"; }
+  if (!success && !engine.getError().empty()) std::cerr << engine.getError() << '\n';
+  if (!shutdown.shutdown()) { std::cerr << engine.getError() << '\n'; success = false; }
   if (smoke && success) std::cout << "Test graphique reussi : rendu, erreurs et boucle verifies.\n";
   return success ? 0 : 1;
 }

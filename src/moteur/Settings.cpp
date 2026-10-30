@@ -5,6 +5,9 @@
 #include <cstdint>
 #include <cstring>
 #include <fstream>
+#include <windows.h>
+#include <atomic>
+#include <chrono>
 #include <utility>
 
 namespace moteur {
@@ -162,9 +165,14 @@ bool Settings::save() {
         std::filesystem::create_directories(parent, ec);
         if (ec) { error = "Impossible de créer le dossier des paramètres : " + ec.message(); return false; }
     }
-    std::ofstream out(filePath, std::ios::binary | std::ios::trunc);
+    static std::atomic<std::uint64_t> sequence{0};
+    const auto unique = static_cast<std::uint64_t>(std::chrono::steady_clock::now().time_since_epoch().count()) ^
+        sequence.fetch_add(1, std::memory_order_relaxed);
+    auto temporaryPath = filePath;
+    temporaryPath += ".tmp." + std::to_string(unique);
+    std::ofstream out(temporaryPath, std::ios::binary | std::ios::trunc);
     if (!out) {
-        error = "Impossible d'ouvrir le fichier de paramètres en écriture.";
+        error = "Impossible d'ouvrir le fichier temporaire des paramètres en écriture.";
         return false;
     }
     out.write(signature.data(), static_cast<std::streamsize>(signature.size()));
@@ -177,7 +185,18 @@ bool Settings::save() {
         writeU32(out, fullscreen ? 1u : 0u) && writeU32(out, vsync ? 1u : 0u) &&
         writeFloat(out, sensitivity) && writeFloat(out, fov) && writeU32(out, programBinaryFormat);
     out.flush();
-    if (!fieldsWritten || !out) { error = "Écriture du fichier de paramètres échouée."; return false; }
+    out.close();
+    if (!fieldsWritten || !out) {
+        std::filesystem::remove(temporaryPath, ec);
+        error = "Écriture du fichier temporaire de paramètres échouée.";
+        return false;
+    }
+    if (!MoveFileExW(temporaryPath.c_str(), filePath.c_str(), MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH)) {
+        const auto code = GetLastError();
+        std::filesystem::remove(temporaryPath, ec);
+        error = "Remplacement du fichier de paramètres échoué (code Windows " + std::to_string(code) + ").";
+        return false;
+    }
     return true;
 }
 

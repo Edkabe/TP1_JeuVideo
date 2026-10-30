@@ -73,32 +73,45 @@ bool Engine::run(const std::function<void(float)>& update, const std::function<v
 bool Engine::run(Scene& scene, const std::function<void(float)>& update,
                  const std::function<void()>& render) {
     // L'Engine récupère les événements SDL; la scène active les distribue à ses observateurs.
-    return run(update, render, [&scene](const SDL_Event& sdlEvent) {
+    const bool completed = run([this, &scene, &update](float dt) { update(dt); if (!scene.getError().empty()) reportError(scene.getError()); }, [this, &scene, &render] {
+        render();
+        if (!scene.getError().empty()) reportError(scene.getError());
+    }, [&scene](const SDL_Event& sdlEvent) {
         const Event event(sdlEvent);
         scene.dispatchEvent(event);
     });
+    if (completed && !scene.getError().empty()) { error = scene.getError(); return false; }
+    if (completed && !error.empty()) return false;
+    return completed;
 }
 bool Engine::run(SceneManager& scenes) {
     // La boucle consulte le gestionnaire à chaque étape: une transition
     // demandée pendant update prend effet dès le rendu suivant.
-    return run(
-        [&scenes](float deltaTime) { scenes.update(deltaTime); },
-        [&scenes] { scenes.render(); },
+    const bool completed = run(
+        [this, &scenes](float deltaTime) { scenes.update(deltaTime); if (!scenes.getActiveSceneError().empty()) reportError(scenes.getActiveSceneError()); },
+        [this, &scenes] { scenes.render(); if (!scenes.getActiveSceneError().empty()) reportError(scenes.getActiveSceneError()); },
         [&scenes](const SDL_Event& sdlEvent) {
             const Event event(sdlEvent);
             scenes.dispatchEvent(event);
         });
+    if (completed && !scenes.getActiveSceneError().empty()) { error = scenes.getActiveSceneError(); return false; }
+    if (completed && !error.empty()) return false;
+    return completed;
 }
 bool Engine::shutdown() {
     if (running) { error = "Arreter la boucle avant de fermer le moteur."; return false; }
     // Les objets graphiques clients doivent être libérés AVANT cet appel.
     // Vider le gestionnaire tant que le contexte est encore actif.
-    if (initialized && !window.makeCurrent()) { error = SDL_GetError(); return false; }
+    const bool contextReady = !initialized || window.makeCurrent();
+    if (!contextReady) error = SDL_GetError();
     resources.clear();
-    if (!settings.save()) { error = settings.getError(); return false; }
+    bool saved = settings.save();
+    if (!saved && error.empty()) error = settings.getError();
     window.close();
     if (initialized) SDL_QuitSubSystem(SDL_INIT_VIDEO);
     initialized = false;
+    if (!contextReady || !saved) return false;
+    error.clear();
     return true;
 }
 }

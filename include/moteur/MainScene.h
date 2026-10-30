@@ -18,7 +18,9 @@ public:
     void unload() override;
     void render() override;
     bool isLoaded() const { return loaded; }
-    const std::string& getError() const { return error; }
+    const std::string& getError() const override { return error; }
+    const std::shared_ptr<Font>& getSharedFont() const { return sharedFont; }
+    const std::shared_ptr<Texture>& getSharedBackground() const { return sharedBackground; }
     // Pointeur emprunte, invalide apres unload().
     const Button* getButton(Action action) const;
 private:
@@ -30,6 +32,8 @@ private:
     std::filesystem::path fontFile,backgroundFile;
     Targets targets;
     std::unique_ptr<Image> background;
+    std::shared_ptr<Font> sharedFont;
+    std::shared_ptr<Texture> sharedBackground;
     std::unique_ptr<Label> title,status;
     std::array<std::shared_ptr<Button>,4> buttons;
     bool loaded = false;

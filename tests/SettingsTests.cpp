@@ -4,6 +4,7 @@
 #include <filesystem>
 #include <iostream>
 #include <stdexcept>
+#include <chrono>
 
 namespace {
 int checks = 0;
@@ -14,7 +15,8 @@ void check(bool value, const char* message) {
 }
 
 int main() {
-    const auto directory = std::filesystem::temp_directory_path() / "tp1-settings-tests";
+    const auto directory = std::filesystem::temp_directory_path() /
+        ("tp1-settings-tests-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
     const auto file = directory / "settings.bin";
     std::error_code ec;
     std::filesystem::remove_all(directory, ec);

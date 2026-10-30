@@ -13,7 +13,7 @@ const Button* MainScene::getButton(Action action) const {
 }
 std::shared_ptr<Font> MainScene::acquireFont(float size) {
     auto& resources = Engine::getInstance().getResourceManager();
-    const auto key = "main:font:" + std::to_string(size) + ":" + fontFile.u8string();
+    const auto key = "shared:font:" + std::to_string(size) + ":" + fontFile.u8string();
     auto font = resources.get<Font>(key);
     if (!font && resources.contains(key)) { error = "Nom de police utilise par une autre ressource."; return {}; }
     if (font && font->isLoaded()) return font;
@@ -24,7 +24,7 @@ std::shared_ptr<Font> MainScene::acquireFont(float size) {
 }
 std::shared_ptr<Texture> MainScene::acquireBackground() {
     auto& resources = Engine::getInstance().getResourceManager();
-    const auto key = "main:background:" + backgroundFile.u8string();
+    const auto key = "shared:background:" + backgroundFile.u8string();
     auto texture = resources.get<Texture>(key);
     if (!texture && resources.contains(key)) { error = "Nom de texture utilise par une autre ressource."; return {}; }
     if (texture && texture->isLoaded()) return texture;
@@ -41,6 +41,8 @@ bool MainScene::load() {
     if (!texture) return false;
     const auto titleFont = acquireFont(36),bodyFont = acquireFont(22);
     if (!titleFont || !bodyFont) return false;
+    sharedFont = bodyFont;
+    sharedBackground = texture;
     const auto& language = Engine::getInstance().getSettings().getLanguage();
     background = std::make_unique<Image>(texture);
     title = std::make_unique<Label>(titleFont,localized(language,"TP1 - Moteur graphique","TP1 - Graphics engine"));
@@ -68,7 +70,10 @@ bool MainScene::load() {
     buttons[2]->setOnClick([this] { navigate(targets.credits); });
     buttons[3]->setOnClick([] { Engine::getInstance().stop(); });
     int width = 0,height = 0;
-    Engine::getInstance().getWindow().getPixelSize(width,height);
+    if (!Engine::getInstance().getWindow().getPixelSize(width,height) || width <= 0 || height <= 0) {
+        error = SDL_GetError(); if (error.empty()) error = "Dimensions de fenetre indisponibles.";
+        unload(); return false;
+    }
     layout(width,height); loaded = true;
     return true;
 }
@@ -105,20 +110,21 @@ void MainScene::render() {
     if (!loaded) return;
     auto& engine = Engine::getInstance();
     int width = 0,height = 0;
-    if (!engine.getWindow().getPixelSize(width,height)) { error = SDL_GetError(); engine.stop(); return; }
+    if (!engine.getWindow().getPixelSize(width,height)) { error = SDL_GetError(); engine.reportError(error); return; }
     if (width <= 0 || height <= 0) return;
     glViewport(0,0,width,height); glClearColor(0,0,0,1); glClear(GL_COLOR_BUFFER_BIT);
     glDisable(GL_DEPTH_TEST); glDisable(GL_CULL_FACE); glBlendEquation(GL_FUNC_ADD);
     layout(width,height);
-    if (!background->render()) { error = background->getError(); engine.stop(); return; }
-    if (!title->render()) { error = title->getError(); engine.stop(); return; }
+    if (!background->render()) { error = background->getError(); engine.reportError(error); return; }
+    if (!title->render()) { error = title->getError(); engine.reportError(error); return; }
     for (const auto& button : buttons) {
-        if (!button->render()) { error = button->getError(); engine.stop(); return; }
+        if (!button->render()) { error = button->getError(); engine.reportError(error); return; }
     }
-    if (!status->render()) { error = status->getError(); engine.stop(); }
+    if (!status->render()) { error = status->getError(); engine.reportError(error); }
 }
 void MainScene::unload() {
     for (auto& button : buttons) { getEventManager().removeObserver(button); button.reset(); }
     status.reset(); title.reset(); background.reset(); loaded = false;
+    sharedFont.reset(); sharedBackground.reset();
 }
 }

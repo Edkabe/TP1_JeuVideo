@@ -1,6 +1,9 @@
 #include "moteur/Engine.h"
 #include "moteur/Texture.h"
 #include "moteur/Font.h"
+#include "moteur/CheckBox.h"
+#include "moteur/VAO.h"
+#include "moteur/VBO.h"
 #include <iostream>
 #include <stdexcept>
 #include <filesystem>
@@ -89,6 +92,29 @@ void graphicsTests() {
         check(!texture.isLoaded() && static_cast<GLuint>(texture)==0 && texture.getWidth()==0, "Release idempotent");
         glDeleteTextures(1,&sentinel); check(glGetError()==GL_NO_ERROR,"Pas d'erreur GL");
 
+    }
+    {
+        moteur::VAO sentinelVao;
+        moteur::VBO sentinelBuffer;
+        check(sentinelVao.create() && sentinelBuffer.create(), "VAO et VBO sentinelles crees");
+        sentinelVao.bind(); sentinelBuffer.bind();
+        GLuint sentinelTexture = 0;
+        glGenTextures(1, &sentinelTexture); glBindTexture(GL_TEXTURE_2D, sentinelTexture);
+        GLint expectedVao = 0, expectedBuffer = 0, expectedTexture = 0;
+        glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &expectedVao);
+        glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &expectedBuffer);
+        glGetIntegerv(GL_TEXTURE_BINDING_2D, &expectedTexture);
+        moteur::CheckBox checkBox;
+        checkBox.setSize(24.0f);
+        check(checkBox.initialize() && checkBox.render(), "Initialisation et rendu de la case a cocher");
+        GLint actual = 0;
+        glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &actual); check(actual == expectedVao, "VAO restaure apres rendu CheckBox");
+        glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &actual); check(actual == expectedBuffer, "Binding VBO restaure apres rendu CheckBox");
+        glGetIntegerv(GL_TEXTURE_BINDING_2D, &actual); check(actual == expectedTexture, "Texture restee intacte apres rendu CheckBox");
+        GLint currentProgram = -1; glGetIntegerv(GL_CURRENT_PROGRAM, &currentProgram);
+        check(currentProgram == 0, "Programme restaure apres rendu CheckBox");
+        check(glGetError() == GL_NO_ERROR, "Pas d'erreur GL apres rendu CheckBox");
+        checkBox.release(); glDeleteTextures(1, &sentinelTexture);
     }
     const char* windows=SDL_getenv("WINDIR");
     if (!windows) windows=SDL_getenv("windir");
