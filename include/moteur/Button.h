@@ -1,4 +1,5 @@
 #pragma once
+#include "moteur/VisualComponent.h"
 #include "moteur/EventObserver.h"
 #include "moteur/Label.h"
 #include <functional>
@@ -6,7 +7,7 @@
 namespace moteur {
 // Inscrire le meme shared_ptr<Button> aux mouvements, boutons et pertes de focus
 // du gestionnaire de la scene. Celui-ci ne conserve que des references faibles.
-class Button final : public EventObserver {
+class Button final : public VisualComponent, public EventObserver {
 public:
     Button(std::shared_ptr<Font> font = {}, std::string title = {});
     bool setPosition(Vector2 value);
@@ -26,8 +27,8 @@ public:
     // Evenement de clic : appui gauche puis relachement a l'interieur.
     void setOnClick(std::function<void()> handler) { onClick = std::move(handler); }
     void onEvent(const Event& event) override;
-    bool render();
-    void release();
+    bool render() override;
+    void release() override;
     const std::string& getError() const { return error; }
 private:
     bool contains(Vector2 point) const;

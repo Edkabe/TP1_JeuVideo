@@ -1,11 +1,12 @@
 #pragma once
+#include "moteur/VisualComponent.h"
 #include "moteur/Button.h"
 #include <vector>
 #include <limits>
 
 namespace moteur {
 // Inscrire le selecteur (pas ses boutons internes) au gestionnaire de la scene.
-class Selector final : public EventObserver {
+class Selector final : public VisualComponent, public EventObserver {
 public:
     static constexpr size_t noSelection = (std::numeric_limits<size_t>::max)();
     explicit Selector(std::shared_ptr<Font> font = {}, std::vector<std::string> items = {});
@@ -31,8 +32,8 @@ public:
     const Button& getPreviousButton() const { return previousButton; }
     const Button& getNextButton() const { return nextButton; }
     void onEvent(const Event& event) override;
-    bool render();
-    void release();
+    bool render() override;
+    void release() override;
     const std::string& getError() const { return error; }
 private:
     void layout();

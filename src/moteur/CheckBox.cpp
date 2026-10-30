@@ -1,42 +1,23 @@
 #include "moteur/CheckBox.h"
+#include "moteur/ProgramCache.h"
+#include "moteur/Engine.h"
 #include <cmath>
 
 namespace moteur {
-namespace {
-constexpr const char* vertexSource = R"glsl(
-#version 330 core
-layout (location = 0) in vec2 position;
-layout (location = 1) in vec4 color;
-uniform vec2 resolution;
-out vec4 vertexColor;
-void main() {
-    vec2 clip = vec2(2.0 * position.x / resolution.x - 1.0,
-                     1.0 - 2.0 * position.y / resolution.y);
-    gl_Position = vec4(clip, 0.0, 1.0);
-    vertexColor = color;
-}
-)glsl";
-
-constexpr const char* fragmentSource = R"glsl(
-#version 330 core
-in vec4 vertexColor;
-out vec4 outputColor;
-void main() { outputColor = vertexColor; }
-)glsl";
-}
-
 bool CheckBox::initialize() {
     error.clear();
     if (initialized) return true;
-    if (!vertexShader.compile(vertexSource) || !fragmentShader.compile(fragmentSource)) {
-        error = vertexShader.getError() + fragmentShader.getError();
-        return false;
+    const char* base = SDL_GetBasePath();
+    if (!base) { error = SDL_GetError(); return false; }
+    const auto directory = std::filesystem::path(base) / "assets/shaders";
+    ProgramCache cache;
+    if (!cache.load(program, {{GL_VERTEX_SHADER, directory / "checkbox.vert"},
+                              {GL_FRAGMENT_SHADER, directory / "checkbox.frag"}},
+                    std::filesystem::path(base) / "cache/programs/checkbox.bin",
+                    Engine::getInstance().getSettings())) {
+        error = cache.getError(); return false;
     }
-    if (!program.link({&vertexShader, &fragmentShader})) {
-        error = program.getError();
-        return false;
-    }
-    resolutionLocation = glGetUniformLocation(program.getId(), "resolution");
+    resolutionLocation = program.getUniformLocation("resolution");
     if (resolutionLocation < 0 || !vao.create() || !vbo.create()) {
         error = "Creation des ressources OpenGL de la case impossible.";
         return false;
@@ -44,11 +25,9 @@ bool CheckBox::initialize() {
 
     vao.bind();
     vbo.bind();
-    glBufferData(GL_ARRAY_BUFFER, static_cast<GLsizeiptr>(sizeof(Vertex) * 42), nullptr, GL_DYNAMIC_DRAW);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), nullptr);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(2 * sizeof(float)));
-    glEnableVertexAttribArray(1);
+    vbo.setData(nullptr, static_cast<GLsizeiptr>(sizeof(Vertex) * 42), GL_DYNAMIC_DRAW);
+    vao.setAttribute(0, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), 0);
+    vao.setAttribute(1, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), 2 * sizeof(float));
     VAO::unbind();
     VBO::unbind();
     initialized = true;
@@ -90,7 +69,7 @@ void CheckBox::render(float viewportWidth, float viewportHeight) {
     const float y = position[1];
     const float border = size * 0.09f;
 
-    // Le fond est rentré sous la bordure pour former un cadre net.
+    // Le fond est rentrÃ© sous la bordure pour former un cadre net.
     addRectangle(x + border, y + border, size - 2.0f * border, size - 2.0f * border,
                  backgroundColor, vertices, count);
     addRectangle(x, y, size, border, borderColor, vertices, count);
@@ -98,7 +77,7 @@ void CheckBox::render(float viewportWidth, float viewportHeight) {
     addRectangle(x, y + border, border, size - 2.0f * border, borderColor, vertices, count);
     addRectangle(x + size - border, y + border, border, size - 2.0f * border, borderColor, vertices, count);
     if (checked) {
-        // Deux segments épais composent une coche simple, sans image externe.
+        // Deux segments Ã©pais composent une coche simple, sans image externe.
         addLine(x + size * 0.22f, y + size * 0.51f, x + size * 0.42f, y + size * 0.70f,
                 size * 0.11f, checkColor, vertices, count);
         addLine(x + size * 0.39f, y + size * 0.66f, x + size * 0.79f, y + size * 0.27f,
@@ -118,8 +97,8 @@ bool CheckBox::handleEvent(const SDL_Event& event) {
     if (event.type != SDL_EVENT_MOUSE_BUTTON_DOWN || event.button.button != SDL_BUTTON_LEFT) return false;
     float mouseX = event.button.x;
     float mouseY = event.button.y;
-    // SDL fournit des coordonnées logiques; la case est dessinée en pixels
-    // du viewport, comme les autres contrôles interactifs.
+    // SDL fournit des coordonnÃ©es logiques; la case est dessinÃ©e en pixels
+    // du viewport, comme les autres contrÃ´les interactifs.
     SDL_Window* window = SDL_GetWindowFromID(event.button.windowID);
     if (window && SDL_GL_GetCurrentContext()) {
         int logicalWidth = 0, logicalHeight = 0, pixelWidth = 0, pixelHeight = 0;
@@ -139,4 +118,21 @@ bool CheckBox::handleEvent(const SDL_Event& event) {
     return true;
 }
 
+}
+
+namespace moteur {
+bool CheckBox::render() {
+    if (!SDL_GL_GetCurrentContext()) { error = "Contexte OpenGL actif necessaire."; return false; }
+    if (!initialize()) return false;
+    GLint viewport[4]{};
+    glGetIntegerv(GL_VIEWPORT, viewport);
+    if (viewport[2] > 0 && viewport[3] > 0)
+        render(static_cast<float>(viewport[2]), static_cast<float>(viewport[3]));
+    return true;
+}
+void CheckBox::release() {
+    vbo.release(); vao.release(); program.release();
+    initialized = false;
+    resolutionLocation = -1;
+}
 }

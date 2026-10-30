@@ -108,3 +108,12 @@ Program::~Program() { release(); }
         return true;
     }
 }
+
+namespace moteur {
+GLint Program::getUniformLocation(const char* name) const {
+    return id && name ? glGetUniformLocation(id, name) : -1;
+}
+GLint Program::getAttributeLocation(const char* name) const {
+    return id && name ? glGetAttribLocation(id, name) : -1;
+}
+}

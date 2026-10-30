@@ -20,6 +20,9 @@ public:
     static bool supportsBinary();
     bool getBinary(Binary& binary);
     bool loadBinary(const Binary& binary);
+    // -1 si le nom est absent ou le programme vide.
+    GLint getUniformLocation(const char* name) const;
+    GLint getAttributeLocation(const char* name) const;
     void use() const;
     static void unuse();
     void release();

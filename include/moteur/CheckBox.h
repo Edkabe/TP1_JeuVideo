@@ -1,4 +1,5 @@
 #pragma once
+#include "moteur/VisualComponent.h"
 
 #include "moteur/Color.h"
 #include "moteur/EventObserver.h"
@@ -14,7 +15,7 @@
 namespace moteur {
 
 // Case carrée dessinée en pixels, depuis le coin supérieur gauche de la fenêtre.
-class CheckBox final : public EventObserver {
+class CheckBox final : public VisualComponent, public EventObserver {
 public:
     CheckBox() = default;
     ~CheckBox() = default;
@@ -25,6 +26,8 @@ public:
     // À appeler lorsque le contexte OpenGL est actif.
     bool initialize();
     void render(float viewportWidth, float viewportHeight);
+    bool render() override;
+    void release() override;
 
     void setPosition(float x, float y) { position = {x, y}; }
     void setSize(float value) { size = value > 0.0f ? value : 0.0f; }
@@ -66,8 +69,6 @@ private:
     bool initialized = false;
     GLint resolutionLocation = -1;
     std::string error;
-    VertexShader vertexShader;
-    Shader fragmentShader{GL_FRAGMENT_SHADER};
     Program program;
     VAO vao;
     VBO vbo;

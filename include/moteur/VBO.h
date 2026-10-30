@@ -1,10 +1,11 @@
 #pragma once
+#include "moteur/Buffer.h"
 #include <glad/gl.h>
 
 namespace moteur {
 // Propriétaire unique d'un tampon de sommets sur le GPU.
 // Le contexte OpenGL doit être actif de create() jusqu'à release()/destruction.
-class VBO {
+class VBO : public Buffer {
 public:
     VBO() = default;
     ~VBO();
