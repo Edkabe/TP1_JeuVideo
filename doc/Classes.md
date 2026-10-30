@@ -313,10 +313,4 @@ classDiagram
 - `Selector` compose une étiquette et deux boutons de navigation. Seul le sélecteur est inscrit au gestionnaire d’événements de sa scène.
 - `VBO` réalise le contrat `Buffer`. `VAO` mémorise les attributs associés au tampon de sommets.
 
-## Fichiers de diagrammes
 
-- [Diagramme vectoriel SVG](Classes.svg) — rendu historique; il ne montre pas encore `VisualComponent` et `Buffer`.
-- [Aperçu PNG](Classes.png) — rendu historique correspondant au SVG.
-- [Diagramme UMLet initial](Classes-initiale.uxf) — document conservé comme historique de conception.
-
-Les diagrammes Mermaid ci-dessus représentent les abstractions présentes dans le code actuel. Les rendus PNG et SVG peuvent être conservés comme archives ou supprimés plus tard si vous décidez de ne maintenir que le diagramme Mermaid.
