@@ -90,10 +90,10 @@ bool Image::render() {
     glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
     program.use(); vao.bind(); texture->bind();
     const auto projection = Matrix4::orthographic(0, static_cast<float>(viewport[2]), static_cast<float>(viewport[3]), 0);
-    glUniformMatrix4fv(glGetUniformLocation(program.getId(), "uProjection"), 1, GL_FALSE, projection.data());
-    glUniform2f(glGetUniformLocation(program.getId(), "uPosition"), position.x, position.y);
-    glUniform2f(glGetUniformLocation(program.getId(), "uSize"), dimensions.x, dimensions.y);
-    glUniform1i(glGetUniformLocation(program.getId(), "uTexture"), 0);
+    glUniformMatrix4fv(program.getUniformLocation("uProjection"), 1, GL_FALSE, projection.data());
+    glUniform2f(program.getUniformLocation("uPosition"), position.x, position.y);
+    glUniform2f(program.getUniformLocation("uSize"), dimensions.x, dimensions.y);
+    glUniform1i(program.getUniformLocation("uTexture"), 0);
     glDrawArrays(GL_TRIANGLES, 0, 6);
     glBindTexture(GL_TEXTURE_2D, static_cast<GLuint>(oldTexture)); glBindSampler(0, static_cast<GLuint>(oldSampler));
     glActiveTexture(static_cast<GLenum>(oldActive));

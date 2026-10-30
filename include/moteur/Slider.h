@@ -1,4 +1,5 @@
 #pragma once
+#include "moteur/VisualComponent.h"
 
 #include "moteur/Color.h"
 #include "moteur/EventObserver.h"
@@ -11,7 +12,7 @@ namespace moteur {
 
 // Curseur horizontal en pixels. Une scène garde l'objet vivant et l'inscrit
 // aux événements souris de son EventManager.
-class Slider final : public EventObserver {
+class Slider final : public VisualComponent, public EventObserver {
 public:
     Slider() = default;
     ~Slider() override = default;
@@ -40,9 +41,9 @@ public:
     void setHoverColor(Color color) { hoverColor = color; }
 
     // Rend la barre et sa poignée dans le viewport OpenGL courant.
-    bool render();
+    bool render() override;
     void onEvent(const Event& event) override;
-    void release();
+    void release() override;
     bool isHovered() const { return hovered; }
     bool isDragging() const { return dragging; }
     const std::string& getError() const { return error; }

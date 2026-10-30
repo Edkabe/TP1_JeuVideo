@@ -125,13 +125,13 @@ bool Button::render() {
     glEnable(GL_BLEND); glDisable(GL_DEPTH_TEST); glDisable(GL_CULL_FACE);
     glBlendEquation(GL_FUNC_ADD); glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
     program.use(); vao.bind();
-    glUniform2f(glGetUniformLocation(program.getId(), "uViewport"), static_cast<float>(viewport[2]), static_cast<float>(viewport[3]));
-    glUniform2f(glGetUniformLocation(program.getId(), "uPosition"), position.x, position.y);
-    glUniform2f(glGetUniformLocation(program.getId(), "uSize"), dimensions.x, dimensions.y);
-    glUniform1f(glGetUniformLocation(program.getId(), "uBorderWidth"), borderWidth);
+    glUniform2f(program.getUniformLocation("uViewport"), static_cast<float>(viewport[2]), static_cast<float>(viewport[3]));
+    glUniform2f(program.getUniformLocation("uPosition"), position.x, position.y);
+    glUniform2f(program.getUniformLocation("uSize"), dimensions.x, dimensions.y);
+    glUniform1f(program.getUniformLocation("uBorderWidth"), borderWidth);
     const auto color = hovered ? hover : background;
-    glUniform4f(glGetUniformLocation(program.getId(), "uBackground"), color.r, color.g, color.b, color.a);
-    glUniform4f(glGetUniformLocation(program.getId(), "uBorder"), border.r, border.g, border.b, border.a);
+    glUniform4f(program.getUniformLocation("uBackground"), color.r, color.g, color.b, color.a);
+    glUniform4f(program.getUniformLocation("uBorder"), border.r, border.g, border.b, border.a);
     glDrawArrays(GL_TRIANGLES, 0, 6);
     centerTitle();
     if (!label.render()) { error = label.getError(); return false; }

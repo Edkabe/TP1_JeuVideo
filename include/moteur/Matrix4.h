@@ -45,6 +45,7 @@ public:
     }
 
     constexpr float operator()(int row, int column) const { return values[column * 4 + row]; }
+    explicit constexpr operator const float*() const { return values.data(); }
     constexpr const float* data() const { return values.data(); }
 
     constexpr Matrix4 operator*(const Matrix4& other) const {

@@ -1,4 +1,6 @@
 #include "moteur/Slider.h"
+#include "moteur/ProgramCache.h"
+#include "moteur/Engine.h"
 #include "moteur/Vector2.h"
 #include "moteur/VertexShader.h"
 #include <SDL3/SDL.h>
@@ -12,8 +14,8 @@ bool finite(Vector2 point) {
     return std::isfinite(point.x) && std::isfinite(point.y);
 }
 
-// Les événements SDL utilisent les pixels logiques de la souris; le slider
-// est placé dans le viewport OpenGL, qui peut être en pixels haute résolution.
+// Les Ã©vÃ©nements SDL utilisent les pixels logiques de la souris; le slider
+// est placÃ© dans le viewport OpenGL, qui peut Ãªtre en pixels haute rÃ©solution.
 Vector2 mousePosition(float x, float y, SDL_WindowID windowId) {
     SDL_Window* window = SDL_GetWindowFromID(windowId);
     if (!window || !SDL_GL_GetCurrentContext()) return {x, y};
@@ -29,7 +31,7 @@ Vector2 mousePosition(float x, float y, SDL_WindowID windowId) {
             y * pixelHeight / logicalHeight - (pixelHeight - viewport[1] - viewport[3])};
 }
 
-// Le contrôle restaure l'état OpenGL pour ne pas modifier le rendu suivant.
+// Le contrÃ´le restaure l'Ã©tat OpenGL pour ne pas modifier le rendu suivant.
 struct RenderState {
     GLint program = 0, vao = 0;
     GLint sourceRgb = 0, destinationRgb = 0, sourceAlpha = 0, destinationAlpha = 0;
@@ -109,7 +111,7 @@ bool Slider::setValue(float nextValue) {
 
     // Arrondir au pas le plus proche, puis borner pour conserver une valeur valide.
     const float bounded = (std::clamp)(nextValue, minimum, maximum);
-    // Le maximum reste une valeur valide même si l'intervalle n'est pas un multiple du pas.
+    // Le maximum reste une valeur valide mÃªme si l'intervalle n'est pas un multiple du pas.
     if (bounded == maximum) { value = maximum; return true; }
     const float steps = std::round((bounded - minimum) / increment);
     value = (std::clamp)(minimum + steps * increment, minimum, maximum);
@@ -137,7 +139,7 @@ bool Slider::containsThumb(Vector2 point) const {
 void Slider::updateFromMouse(float x) {
     const float travel = dimensions.x - thumbWidth();
     if (travel <= 0.0f) return;
-    // Conserver le point exact où la poignée a été saisie pendant le glissement.
+    // Conserver le point exact oÃ¹ la poignÃ©e a Ã©tÃ© saisie pendant le glissement.
     const float ratio = (std::clamp)((x - dragOffset - position.x) / travel, 0.0f, 1.0f);
     setValue(minimum + ratio * (maximum - minimum));
 }
@@ -150,7 +152,7 @@ void Slider::onEvent(const Event& event) {
         return;
     }
     if (sdl.type == SDL_EVENT_WINDOW_MOUSE_LEAVE) {
-        // Garder le glissement actif jusqu'au relâchement du bouton gauche.
+        // Garder le glissement actif jusqu'au relÃ¢chement du bouton gauche.
         hovered = false;
         return;
     }
@@ -168,7 +170,7 @@ void Slider::onEvent(const Event& event) {
         return;
     }
     if (sdl.type == SDL_EVENT_MOUSE_BUTTON_UP && sdl.button.button == SDL_BUTTON_LEFT) {
-        // Le relâchement termine le glissement même si la souris est hors du contrôle.
+        // Le relÃ¢chement termine le glissement mÃªme si la souris est hors du contrÃ´le.
         const Vector2 point = mousePosition(sdl.button.x, sdl.button.y, sdl.button.windowID);
         dragging = false;
         hovered = containsThumb(point);
@@ -182,17 +184,13 @@ bool Slider::createGraphics() {
 
     // Le shader rectangulaire du bouton sert aussi aux morceaux du glisseur.
     const auto shaderDirectory = std::filesystem::path(basePath) / "assets" / "shaders";
-    VertexShader vertex;
-    Shader fragment(GL_FRAGMENT_SHADER);
-    if (!vertex.loadShader((shaderDirectory / "button.vert").string())) {
-        error = vertex.getError();
-        return false;
+    ProgramCache cache;
+    if (!cache.load(program, {{GL_VERTEX_SHADER, shaderDirectory / "button.vert"},
+                              {GL_FRAGMENT_SHADER, shaderDirectory / "button.frag"}},
+                    std::filesystem::path(basePath) / "cache/programs/button.bin",
+                    Engine::getInstance().getSettings())) {
+        error = cache.getError(); return false;
     }
-    if (!fragment.loadShader((shaderDirectory / "button.frag").string())) {
-        error = fragment.getError();
-        return false;
-    }
-    if (!program.link({&vertex, &fragment})) { error = program.getError(); return false; }
     if (!vao.create()) { error = "Creation du VAO du glisseur impossible."; return false; }
     return true;
 }
@@ -216,14 +214,13 @@ bool Slider::render() {
     program.use();
     vao.bind();
 
-    const GLuint id = program.getId();
-    glUniform2f(glGetUniformLocation(id, "uViewport"),
+    glUniform2f(program.getUniformLocation("uViewport"),
                 static_cast<float>(viewport[2]), static_cast<float>(viewport[3]));
-    const GLint positionLocation = glGetUniformLocation(id, "uPosition");
-    const GLint sizeLocation = glGetUniformLocation(id, "uSize");
-    const GLint borderWidthLocation = glGetUniformLocation(id, "uBorderWidth");
-    const GLint borderLocation = glGetUniformLocation(id, "uBorder");
-    const GLint backgroundLocation = glGetUniformLocation(id, "uBackground");
+    const GLint positionLocation = program.getUniformLocation("uPosition");
+    const GLint sizeLocation = program.getUniformLocation("uSize");
+    const GLint borderWidthLocation = program.getUniformLocation("uBorderWidth");
+    const GLint borderLocation = program.getUniformLocation("uBorder");
+    const GLint backgroundLocation = program.getUniformLocation("uBackground");
 
     auto drawRectangle = [&](Vector2 topLeft, Vector2 size, Color border, Color fill, float borderWidth) {
         glUniform2f(positionLocation, topLeft.x, topLeft.y);

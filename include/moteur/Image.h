@@ -1,4 +1,5 @@
 #pragma once
+#include "moteur/VisualComponent.h"
 #include "moteur/Texture.h"
 #include "moteur/Vector2.h"
 #include "moteur/Program.h"
@@ -9,7 +10,7 @@
 namespace moteur {
 // Position en pixels, origine en haut a gauche du viewport.
 // Detruire/liberer les objets graphiques avant de fermer le contexte.
-class Image {
+class Image : public VisualComponent {
 public:
     explicit Image(std::shared_ptr<Texture> texture = {});
     bool setTexture(std::shared_ptr<Texture> texture);
@@ -19,8 +20,8 @@ public:
     Vector2 getDimensions() const { return dimensions; }
     // Avec respect de l'aspect, inscrit l'image dans le rectangle demande.
     bool resize(Vector2 bounds, bool keepAspectRatio = false);
-    bool render();
-    void release(); // Libere le rendu propre au controle, pas la texture partagee.
+    bool render() override;
+    void release() override; // Libere le rendu propre au controle, pas la texture partagee.
     const std::string& getError() const { return error; }
 private:
     bool createGraphics();

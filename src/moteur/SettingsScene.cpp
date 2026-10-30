@@ -363,9 +363,9 @@ void SettingsScene::render() {
     else if (!applyButton->render()) error = applyButton->getError();
     else if (!backButton->render()) error = backButton->getError();
     else {
-        fullscreen->render(static_cast<float>(width), static_cast<float>(height));
-        vsync->render(static_cast<float>(width), static_cast<float>(height));
-        if (!status->render()) error = status->getError();
+        if (!fullscreen->render()) error = fullscreen->getError();
+        else if (!vsync->render()) error = vsync->getError();
+        else if (!status->render()) error = status->getError();
         else return;
     }
     engine.stop();
@@ -391,6 +391,8 @@ void SettingsScene::unload() {
     if (status) status->release();
     if (title) title->release();
     applyButton.reset(); backButton.reset(); language.reset(); resolution.reset();
+    if (fullscreen) fullscreen->release();
+    if (vsync) vsync->release();
     fullscreen.reset(); vsync.reset(); sensitivity.reset(); fov.reset();
     background.reset(); status.reset(); title.reset();
     for (auto& label : rowLabels) label.reset();

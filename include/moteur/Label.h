@@ -1,4 +1,5 @@
 #pragma once
+#include "moteur/VisualComponent.h"
 
 #include "moteur/Color.h"
 #include "moteur/Font.h"
@@ -11,7 +12,7 @@
 
 namespace moteur {
 // Contrôle texte 2D dessiné dans le viewport OpenGL courant.
-class Label final {
+class Label final : public VisualComponent {
 public:
     Label() = default;
     Label(std::shared_ptr<Font> font, std::string text = {});
@@ -32,8 +33,8 @@ public:
     const std::string& getError() const { return error_; }
 
     // Les objets OpenGL détenus par l'étiquette doivent être détruits avec le contexte actif.
-    bool render();
-    void release();
+    bool render() override;
+    void release() override;
 
 private:
     bool createGraphics();

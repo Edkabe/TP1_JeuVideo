@@ -3,19 +3,8 @@
 #include "moteur/Engine.h"
 #include <SDL3/SDL.h>
 #include <algorithm>
-#include <memory>
 
 namespace moteur {
-namespace {
-
-
-
-
-struct SurfaceDeleter {
-    void operator()(SDL_Surface* surface) const { SDL_DestroySurface(surface); }
-};
-}
-
 Label::Label(std::shared_ptr<Font> font, std::string text) : font_(std::move(font)), text_(std::move(text)) {}
 Label::~Label() { release(); }
 
@@ -82,11 +71,11 @@ bool Label::createGraphics() {
     glBindVertexArray(static_cast<GLuint>(previousVao));
     glBindBuffer(GL_ARRAY_BUFFER, static_cast<GLuint>(previousBuffer));
 
-    viewportUniform_ = glGetUniformLocation(program_.getId(), "uViewport");
-    positionUniform_ = glGetUniformLocation(program_.getId(), "uPosition");
-    sizeUniform_ = glGetUniformLocation(program_.getId(), "uSize");
-    colorUniform_ = glGetUniformLocation(program_.getId(), "uColor");
-    samplerUniform_ = glGetUniformLocation(program_.getId(), "uText");
+    viewportUniform_ = program_.getUniformLocation("uViewport");
+    positionUniform_ = program_.getUniformLocation("uPosition");
+    sizeUniform_ = program_.getUniformLocation("uSize");
+    colorUniform_ = program_.getUniformLocation("uColor");
+    samplerUniform_ = program_.getUniformLocation("uText");
     if (viewportUniform_ < 0 || positionUniform_ < 0 || sizeUniform_ < 0 || colorUniform_ < 0 || samplerUniform_ < 0) {
         error_ = "Uniform du texte introuvable.";
         return false;
@@ -105,56 +94,9 @@ bool Label::updateTexture() {
     if (!font_ || !font_->isLoaded()) { error_ = "Aucune police chargee pour le texte."; return false; }
     if (!SDL_GL_GetCurrentContext()) { error_ = "Un contexte OpenGL actif est necessaire."; return false; }
 
-    const SDL_Color white{255, 255, 255, 255};
-    using Surface = std::unique_ptr<SDL_Surface, SurfaceDeleter>;
-    Surface rendered(TTF_RenderText_Blended(static_cast<TTF_Font*>(*font_), text_.c_str(), text_.size(), white));
-    if (!rendered) { error_ = SDL_GetError(); return false; }
-    Surface pixels(SDL_ConvertSurface(rendered.get(), SDL_PIXELFORMAT_RGBA32));
-    if (!pixels || !SDL_LockSurface(pixels.get())) { error_ = SDL_GetError(); return false; }
-
-    GLint oldTexture = 0, oldAlignment = 4, oldRowLength = 0;
-    GLint oldSkipRows = 0, oldSkipPixels = 0, oldPixelBuffer = 0;
-    glGetIntegerv(GL_TEXTURE_BINDING_2D, &oldTexture);
-    glGetIntegerv(GL_UNPACK_ALIGNMENT, &oldAlignment);
-    glGetIntegerv(GL_UNPACK_ROW_LENGTH, &oldRowLength);
-    glGetIntegerv(GL_UNPACK_SKIP_ROWS, &oldSkipRows);
-    glGetIntegerv(GL_UNPACK_SKIP_PIXELS, &oldSkipPixels);
-    glGetIntegerv(GL_PIXEL_UNPACK_BUFFER_BINDING, &oldPixelBuffer);
-    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    glPixelStorei(GL_UNPACK_ROW_LENGTH, pixels->pitch / 4);
-    glPixelStorei(GL_UNPACK_SKIP_ROWS, 0);
-    glPixelStorei(GL_UNPACK_SKIP_PIXELS, 0);
-    GLuint candidate = 0;
-    glGenTextures(1, &candidate);
-    if (candidate) {
-        glBindTexture(GL_TEXTURE_2D, candidate);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, pixels->w, pixels->h, 0,
-                     GL_RGBA, GL_UNSIGNED_BYTE, pixels->pixels);
+    if (!font_->createTextTexture(text_, texture_, textureWidth_, textureHeight_)) {
+        error_ = font_->getError(); return false;
     }
-    GLint uploadedWidth = 0;
-    if (candidate) glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &uploadedWidth);
-    glBindTexture(GL_TEXTURE_2D, static_cast<GLuint>(oldTexture));
-    glPixelStorei(GL_UNPACK_ALIGNMENT, oldAlignment);
-    glPixelStorei(GL_UNPACK_ROW_LENGTH, oldRowLength);
-    glPixelStorei(GL_UNPACK_SKIP_ROWS, oldSkipRows);
-    glPixelStorei(GL_UNPACK_SKIP_PIXELS, oldSkipPixels);
-    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, static_cast<GLuint>(oldPixelBuffer));
-    SDL_UnlockSurface(pixels.get());
-
-    if (!candidate || uploadedWidth != pixels->w) {
-        if (candidate) glDeleteTextures(1, &candidate);
-        error_ = "Envoi du texte a OpenGL impossible.";
-        return false;
-    }
-    if (texture_) glDeleteTextures(1, &texture_);
-    texture_ = candidate;
-    textureWidth_ = pixels->w;
-    textureHeight_ = pixels->h;
     textureDirty_ = false;
     return true;
 }

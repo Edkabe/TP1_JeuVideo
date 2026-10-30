@@ -42,10 +42,10 @@ namespace moteur {
         glPixelStorei(GL_UNPACK_SKIP_ROWS, 0);
         glPixelStorei(GL_UNPACK_SKIP_PIXELS, 0);
         glBindTexture(GL_TEXTURE_2D, candidate);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, minFilter);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, magFilter);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrapS);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrapT);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, pixels->w, pixels->h, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels->pixels);
         GLint uploadedWidth = 0;
         glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &uploadedWidth);
@@ -63,4 +63,35 @@ namespace moteur {
         id = candidate; width = pixels->w; height = pixels->h; loaded = true;
         return true;
     }
+}
+
+namespace moteur {
+bool Texture::setFiltering(GLenum minification, GLenum magnification) {
+    if ((minification != GL_LINEAR && minification != GL_NEAREST) ||
+        (magnification != GL_LINEAR && magnification != GL_NEAREST)) {
+        error = "Filtre invalide : utiliser GL_LINEAR ou GL_NEAREST."; return false;
+    }
+    if (id && !SDL_GL_GetCurrentContext()) { error = "Contexte OpenGL actif necessaire."; return false; }
+    minFilter = minification; magFilter = magnification;
+    if (id) {
+        GLint previous; glGetIntegerv(GL_TEXTURE_BINDING_2D, &previous); bind();
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, minFilter);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, magFilter);
+        glBindTexture(GL_TEXTURE_2D, static_cast<GLuint>(previous));
+    }
+    error.clear(); return true;
+}
+bool Texture::setWrapping(GLenum horizontal, GLenum vertical) {
+    auto valid = [](GLenum value) { return value == GL_REPEAT || value == GL_MIRRORED_REPEAT || value == GL_CLAMP_TO_EDGE; };
+    if (!valid(horizontal) || !valid(vertical)) { error = "Mode de repetition invalide."; return false; }
+    if (id && !SDL_GL_GetCurrentContext()) { error = "Contexte OpenGL actif necessaire."; return false; }
+    wrapS = horizontal; wrapT = vertical;
+    if (id) {
+        GLint previous; glGetIntegerv(GL_TEXTURE_BINDING_2D, &previous); bind();
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrapS);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrapT);
+        glBindTexture(GL_TEXTURE_2D, static_cast<GLuint>(previous));
+    }
+    error.clear(); return true;
+}
 }

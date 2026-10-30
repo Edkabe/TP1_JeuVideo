@@ -1,4 +1,5 @@
 #pragma once
+#include "moteur/VisualComponent.h"
 #include "moteur/Color.h"
 #include "moteur/Vector2.h"
 #include "moteur/Program.h"
@@ -7,7 +8,7 @@
 namespace moteur {
 // Controle horizontal, en pixels du viewport depuis son coin haut gauche.
 // Detruire/liberer les objets graphiques avant de fermer le contexte OpenGL.
-class ProgressBar final {
+class ProgressBar final : public VisualComponent {
 public:
     bool setPosition(Vector2 value);
     bool setDimensions(Vector2 value);
@@ -25,8 +26,8 @@ public:
     void setBackgroundColor(Color color) { background = color; }
     void setProgressColor(Color color) { progress = color; }
     bool setBorderWidth(float width);
-    bool render();
-    void release();
+    bool render() override;
+    void release() override;
     const std::string& getError() const { return error; }
 private:
     bool createGraphics();
