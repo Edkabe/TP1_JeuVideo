@@ -28,6 +28,10 @@ public:
     // Cette surcharge branche automatiquement la boucle sur la scène active.
     bool run(SceneManager& scenes);
     void stop() { running = false; }
+    void reportError(const std::string& message) {
+        error = message.empty() ? "Erreur du moteur sans diagnostic detaille." : message;
+        running = false;
+    }
     bool shutdown();
     bool isRunning() const { return running; }
     Window& getWindow() { return window; }

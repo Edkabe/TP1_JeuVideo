@@ -18,7 +18,7 @@ public:
     bool isLoadingComplete() const { return loadingComplete; }
     float getLoadingProgress() const { return progress ? progress->getProgress() : 0.0f; }
     const Button* getReturnButton() const { return back.get(); }
-    const std::string& getError() const { return error; }
+    const std::string& getError() const override { return error; }
 private:
     void layout(int width, int height);
     SceneManager& scenes;

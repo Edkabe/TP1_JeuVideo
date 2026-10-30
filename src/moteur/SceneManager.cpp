@@ -50,8 +50,9 @@ bool SceneManager::setActiveScene(const std::string& name) {
     // Charger la destination avant de quitter la scène courante évite de se
     // retrouver sans scène active si son chargement échoue.
     if (!target->second->load()) {
+        error = target->second->getError();
+        if (error.empty()) error = "Le chargement de la scene a echoue : " + name;
         target->second->unload(); // Nettoie les ressources partiellement chargées.
-        error = "Le chargement de la scene a echoue : " + name;
         return false;
     }
 
@@ -81,6 +82,12 @@ IScene* SceneManager::getActiveScene() {
 const IScene* SceneManager::getActiveScene() const {
     const auto found = scenes.find(activeName);
     return found == scenes.end() ? nullptr : found->second.get();
+}
+
+const std::string& SceneManager::getActiveSceneError() const {
+    static const std::string empty;
+    const IScene* scene = getActiveScene();
+    return scene ? scene->getError() : empty;
 }
 
 bool SceneManager::hasScene(const std::string& name) const {

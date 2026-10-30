@@ -14,7 +14,7 @@ public:
     void unload() override;
     void render() override;
     bool isLoaded() const { return loaded; }
-    const std::string& getError() const { return error; }
+    const std::string& getError() const override { return error; }
 private:
     std::shared_ptr<Font> acquireFont(float size);
     void layout(int width,int height);

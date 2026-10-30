@@ -29,14 +29,16 @@ public:
     void render() override;
 
     bool isLoaded() const { return loaded; }
-    const std::string& getError() const { return error; }
+    const std::string& getError() const override { return error; }
+    const std::shared_ptr<Font>& getSharedFont() const { return sharedFont; }
+    const std::shared_ptr<Texture>& getSharedBackground() const { return sharedBackground; }
 
 private:
     std::shared_ptr<Font> acquireFont();
     std::shared_ptr<Texture> acquireBackground();
     void layout(int width, int height);
-    void refreshLanguageTexts();
-    void refreshValueLabels();
+    bool refreshLanguageTexts();
+    bool refreshValueLabels();
     void applyChanges();
     void returnToMenu();
 
@@ -48,6 +50,8 @@ private:
     std::vector<std::pair<int, int>> resolutions;
 
     std::unique_ptr<Image> background;
+    std::shared_ptr<Font> sharedFont;
+    std::shared_ptr<Texture> sharedBackground;
     std::unique_ptr<Label> title;
     std::unique_ptr<Label> status;
     std::array<std::unique_ptr<Label>, 6> rowLabels;
