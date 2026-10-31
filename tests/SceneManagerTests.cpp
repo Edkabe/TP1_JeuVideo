@@ -19,18 +19,43 @@ struct SceneProbe {
     int unloads = 0;
     int updates = 0;
     int renders = 0;
+    int events = 0;
+    bool partialObserverRemoved = false;
+};
+
+class ProbeObserver final : public moteur::EventObserver {
+public:
+    explicit ProbeObserver(std::shared_ptr<SceneProbe> state) : state(std::move(state)) {}
+    void onEvent(const moteur::Event&) override { ++state->events; }
+private:
+    std::shared_ptr<SceneProbe> state;
 };
 
 class TestScene final : public moteur::IScene {
 public:
     explicit TestScene(std::shared_ptr<SceneProbe> state) : state(std::move(state)) {}
-    bool load() override { ++state->loads; if (!state->loadSucceeds) error = "Diagnostic load conserve."; return state->loadSucceeds; }
-    void unload() override { ++state->unloads; }
+    bool load() override {
+        ++state->loads;
+        observer = std::make_shared<ProbeObserver>(state);
+        if (!getEventManager().addObserver(observer, SDL_EVENT_KEY_DOWN)) {
+            error = "Inscription de test impossible.";
+            return false;
+        }
+        if (!state->loadSucceeds) error = "Diagnostic load conserve.";
+        return state->loadSucceeds;
+    }
+    void unload() override {
+        ++state->unloads;
+        const bool removed = getEventManager().removeObserver(observer);
+        if (!state->loadSucceeds) state->partialObserverRemoved = removed;
+        observer.reset();
+    }
     void update(float) override { ++state->updates; }
     void render() override { ++state->renders; }
     const std::string& getError() const override { return error; }
 private:
     std::shared_ptr<SceneProbe> state;
+    std::shared_ptr<ProbeObserver> observer;
     std::string error;
 };
 
@@ -126,6 +151,14 @@ int main() {
               "La scene courante reste active apres un echec");
         check(failedState->loads == 1 && failedState->unloads == 1,
               "Nettoyage de la destination partiellement chargee");
+        manager.dispatchEvent(moteur::Event(keyEvent));
+        manager.update(0.016f);
+        manager.render();
+        check(failedState->events == 0 && failedState->updates == 0 && failedState->renders == 0 &&
+              firstState->events == 2 && firstState->updates == 2 && firstState->renders == 2,
+              "Apres un load rate, seuls les evenements, update et render de l'ancienne scene active sont executes");
+        check(failedState->partialObserverRemoved,
+              "Un observateur partiellement inscrit est retire apres un echec de load");
 
         auto secondState = std::make_shared<SceneProbe>();
         check(manager.addScene("jeu", std::make_unique<TestScene>(secondState)), "Ajout de la deuxieme scene");
@@ -133,7 +166,12 @@ int main() {
         check(firstState->unloads == 1 && secondState->loads == 1 &&
               manager.getActiveSceneName() == "jeu", "Transition de chargement et dechargement");
         manager.dispatchEvent(moteur::Event(keyEvent));
-        check(observer->calls == 1, "Les evenements restent propres a chaque scene");
+        manager.update(0.016f);
+        manager.render();
+        check(firstState->events == 2 && firstState->updates == 2 && firstState->renders == 2 &&
+              secondState->events == 1 && secondState->updates == 1 && secondState->renders == 1,
+              "Apres une transition reussie, seule la nouvelle scene active est notifiee et executee");
+        check(observer->calls == 2, "L'observateur de l'ancienne scene n'est notifie que tant qu'elle reste active");
         mouseEvent.button.button = SDL_BUTTON_LEFT;
         manager.dispatchEvent(moteur::Event(mouseEvent));
         check(checkBox->isChecked(), "La case de l'ancienne scene ne recoit plus les evenements");

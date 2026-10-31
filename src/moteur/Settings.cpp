@@ -74,6 +74,28 @@ Settings::Settings(std::filesystem::path file) : filePath(std::move(file)) {
     }
 }
 
+Settings::Values Settings::getValues() const {
+    return {language, width, height, fullscreen, vsync, sensitivity, fov, programBinaryFormat};
+}
+
+bool Settings::setValues(const Values& values) {
+    error.clear();
+    if (!validLanguage(values.language) || !validResolution(values.width, values.height) ||
+        !validSensitivity(values.sensitivity) || !validFov(values.fov)) {
+        error = "Les paramètres proposés contiennent une valeur invalide.";
+        return false;
+    }
+    language = values.language;
+    width = values.width;
+    height = values.height;
+    fullscreen = values.fullscreen;
+    vsync = values.vsync;
+    sensitivity = values.sensitivity;
+    fov = values.fov;
+    programBinaryFormat = values.programBinaryFormat;
+    return true;
+}
+
 void Settings::resetToDefaults() {
     language = "fr";
     width = 960;

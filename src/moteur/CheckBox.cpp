@@ -153,6 +153,11 @@ bool CheckBox::render() {
     glGetIntegerv(GL_VIEWPORT, viewport);
     if (viewport[2] > 0 && viewport[3] > 0)
         render(static_cast<float>(viewport[2]), static_cast<float>(viewport[3]));
+    const GLenum renderError = glGetError();
+    if (renderError != GL_NO_ERROR) {
+        error = "Erreur OpenGL pendant le rendu de la case (code " + std::to_string(renderError) + ").";
+        return false;
+    }
     return true;
 }
 void CheckBox::release() {

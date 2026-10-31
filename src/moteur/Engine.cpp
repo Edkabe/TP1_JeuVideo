@@ -37,6 +37,28 @@ bool Engine::applySettings() {
     error.clear();
     return true;
 }
+
+bool Engine::commitSettings(const Settings::Values& values) {
+    if (!initialized) { error = "Le moteur doit etre initialise avant d'enregistrer les parametres."; return false; }
+    const auto previous = settings.getValues();
+    if (!settings.setValues(values)) { error = settings.getError(); return false; }
+    if (!applySettings()) {
+        const std::string applyError = error;
+        settings.setValues(previous);
+        if (!applySettings()) error = applyError + " | Restauration de l'affichage impossible : " + error;
+        else error = applyError;
+        return false;
+    }
+    if (!settings.save()) {
+        const std::string saveError = settings.getError();
+        settings.setValues(previous);
+        if (!applySettings()) error = saveError + " | Restauration de l'affichage impossible : " + error;
+        else error = saveError;
+        return false;
+    }
+    error.clear();
+    return true;
+}
 bool Engine::run(const std::function<void(float)>& update, const std::function<void()>& render,
                  const std::function<void(const SDL_Event&)>& onEvent) {
     if (running) { error = "La boucle est deja active."; return false; }

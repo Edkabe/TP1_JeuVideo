@@ -248,6 +248,11 @@ bool Slider::render() {
     const Color knobFill = hovered || dragging ? hoverColor : backgroundColor;
     drawRectangle({thumbLeft(), position.y}, {knobWidth, dimensions.y},
                   borderColor, knobFill, 1.0f);
+    const GLenum renderError = glGetError();
+    if (renderError != GL_NO_ERROR) {
+        error = "Erreur OpenGL pendant le rendu du glisseur (code " + std::to_string(renderError) + ").";
+        return false;
+    }
     return true;
 }
 

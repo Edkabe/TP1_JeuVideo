@@ -1,10 +1,19 @@
 #include "moteur/Engine.h"
 #include <SDL3/SDL.h>
 #include <filesystem>
+#include <chrono>
+#include <memory>
 #include <iostream>
 #include <stdexcept>
 
 namespace {
+class TestResource final : public moteur::Resource {
+public:
+    TestResource() : Resource("test-shutdown-resource") {}
+    bool load(const std::string&) override { loaded = true; return true; }
+    void release() override { loaded = false; }
+};
+
 int checks = 0;
 void check(bool value, const char* message) {
     ++checks;
@@ -15,7 +24,8 @@ void check(bool value, const char* message) {
 int main() {
     // Le moteur lit settings.bin relativement au dossier courant. Un dossier
     // temporaire isole ce test des preferences de l'application de l'utilisateur.
-    const auto directory = std::filesystem::temp_directory_path() / "tp1-engine-settings-tests";
+    const auto directory = std::filesystem::temp_directory_path() /
+        ("tp1-engine-settings-tests-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
     std::error_code ec;
     std::filesystem::remove_all(directory, ec);
     std::filesystem::create_directories(directory, ec);
@@ -100,6 +110,30 @@ int main() {
         check(!engine.getWindow().isFullscreen() && !engine.getWindow().isVSyncEnabled(),
               "Le redemarrage reapplique les booleens sauvegardes");
         check(engine.shutdown(), "Arret final du moteur");
+
+        // Forcer l'échec du remplacement du fichier au prochain arrêt. Le
+        // gestionnaire et la fenêtre doivent quand même être nettoyés.
+        std::filesystem::remove("settings.bin", ec);
+        check(!ec, "Fichier de paramètres précédent retiré avant l'échec simulé");
+        std::filesystem::create_directory("settings.bin", ec);
+        check(!ec, "Collision de chemin préparée pour faire échouer la sauvegarde");
+        check(engine.initialize("Test echec sauvegarde arret", 960, 540, true),
+              "Réinitialisation avant l'échec de sauvegarde à l'arrêt");
+        auto resource = std::make_shared<TestResource>();
+        check(resource->load("test") && engine.getResourceManager().add(resource),
+              "Ressource témoin ajoutée au moteur");
+        std::weak_ptr<TestResource> releasedResource = resource;
+        resource.reset();
+        check(!engine.shutdown(), "L'échec de sauvegarde est signalé par shutdown");
+        check(engine.getWindow().getSDLWindow() == nullptr && !engine.isRunning(),
+              "La fenêtre ferme et le moteur s'arrête même si la sauvegarde échoue");
+        check(releasedResource.expired(), "Les ressources du gestionnaire sont libérées après l'échec de sauvegarde");
+
+        std::filesystem::remove_all("settings.bin", ec);
+        check(!ec && engine.getSettings().save(), "Restauration du fichier de paramètres après le test d'échec");
+        check(engine.initialize("Test nettoyage restaure", 960, 540, true),
+              "Le moteur peut redémarrer après l'échec de sauvegarde");
+        check(engine.shutdown(), "Fermeture normale après le redémarrage");
 
         std::cout << checks << " verifications reussies.\n";
         return 0;

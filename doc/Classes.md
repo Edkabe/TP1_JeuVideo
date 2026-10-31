@@ -1,6 +1,6 @@
 # Diagramme de classes du TP1
 
-Ces diagrammes Mermaid décrivent les classes et les relations de la version actuelle du code dans `include/moteur/` et `src/moteur/`. Les vues sont séparées pour rester lisibles dans GitHub.
+Ces diagrammes Mermaid décrivent la version actuelle du code dans `include/moteur/` et `src/moteur/`. **C’est le diagramme de classes courant à remettre.** Le fichier [`Classes-initiale.uxf`](Classes-initiale.uxf) est le modèle antérieur du début du projet; il ne décrit pas l’architecture actuelle. Les vues sont séparées pour rester lisibles dans GitHub.
 
 ## Moteur, paramètres et ressources
 
@@ -10,6 +10,7 @@ classDiagram
         +getInstance()
         +initialize()
         +applySettings()
+        +commitSettings(values)
         +run()
         +stop()
         +shutdown()
@@ -36,6 +37,8 @@ classDiagram
         -programBinaryFormat
         +load()
         +save()
+        +getValues()
+        +setValues(values)
     }
     class ResourceManager {
         -resources: map~string, shared_ptr Resource~
@@ -70,10 +73,10 @@ classDiagram
         +release()
     }
 
-    Engine *-- Window : possède
-    Engine *-- Settings : possède
-    Engine *-- ResourceManager : possède
-    ResourceManager o-- Resource : partage par titre
+    Engine "1" *-- "1" Window : membre par valeur
+    Engine "1" *-- "1" Settings : membre par valeur
+    Engine "1" *-- "1" ResourceManager : membre par valeur
+    ResourceManager "1" o-- "0..*" Resource : map de shared_ptr, par titre
     Resource <|-- Texture
     Resource <|-- Font
 ```
@@ -139,15 +142,36 @@ classDiagram
         +getType()
         +getSDLEvent()
     }
+    class Image
+    class Label
+    class Button
+    class Selector
+    class CheckBox
+    class Slider
+    class ProgressBar
 
-    SceneManager *-- IScene : possède les scènes
+    SceneManager "1" *-- "0..*" IScene : map de unique_ptr, par nom
+    IScene "1" *-- "1" EventManager : membre par valeur
     IScene <|-- MainScene
     IScene <|-- SettingsScene
     IScene <|-- CreditsScene
     IScene <|-- DemoGameScene
-    IScene *-- EventManager : un par scène
-    EventManager ..> EventObserver : notifie
+    EventManager "1" ..> "0..*" EventObserver : observe par weak_ptr
     EventManager ..> Event : transmet
+    MainScene "1" *-- "1" Image : composant possede
+    MainScene "1" *-- "2" Label : composants possedes
+    MainScene "1" *-- "4" Button : composants possedes
+    SettingsScene "1" *-- "1" Image : composant possede
+    SettingsScene "1" *-- "8" Label : composants possedes
+    SettingsScene "1" *-- "2" Selector : composants possedes
+    SettingsScene "1" *-- "2" CheckBox : composants possedes
+    SettingsScene "1" *-- "2" Slider : composants possedes
+    SettingsScene "1" *-- "2" Button : composants possedes
+    CreditsScene "1" *-- "6" Label : composants possedes
+    CreditsScene "1" *-- "1" Button : composant possede
+    DemoGameScene "1" *-- "2" Label : composants possedes
+    DemoGameScene "1" *-- "1" ProgressBar : composant possede
+    DemoGameScene "1" *-- "1" Button : composant possede
 ```
 
 ## Rendu et contrôles visuels
@@ -287,17 +311,17 @@ classDiagram
     EventObserver <|-- Selector
     EventObserver <|-- Slider
 
-    Image o-- Texture : ressource partagée
-    Label o-- Font : ressource partagée
-    Button *-- Label
-    Selector *-- Label
-    Selector *-- Button : deux boutons de navigation
-    Button --> Program
-    Image --> Program
-    Label --> Program
-    ProgressBar --> Program
+    Image "0..*" --> "1" Texture : référence partagée
+    Label "0..*" --> "1" Font : référence partagée
+    Button "1" *-- "1" Label : membre par valeur
+    Selector "1" *-- "1" Label : membre par valeur
+    Selector "1" *-- "2" Button : navigation, membres par valeur
+    Button "1" *-- "1" Program : membre par valeur
+    Image "1" *-- "1" Program : membre par valeur
+    Label "1" *-- "1" Program : membre par valeur
+    ProgressBar "1" *-- "1" Program : membre par valeur
     Program ..> Shader : compile et lie
-    VAO --> VBO : capture les attributs
+    VAO ..> VBO : capture les attributs liés
     VBO ..|> Buffer
     Matrix4 ..> Program : fournit la matrice
 ```
@@ -305,12 +329,12 @@ classDiagram
 ## Relations et patrons
 
 - `Engine` est un Singleton. Il possède la fenêtre, les paramètres et le gestionnaire de ressources.
-- `SceneManager` possède les scènes par `unique_ptr`. Chaque scène possède son propre `EventManager`.
-- `EventManager` applique le patron Observateur : il notifie les observateurs inscrits pour un type d’événement.
-- `ResourceManager` conserve les ressources par titre avec des références partagées.
-- Les scènes sont chargées par `SceneManager` au moment de leur activation, puis déchargées à leur désactivation.
-- Les sept contrôles implémentent `VisualComponent`. `Button`, `CheckBox`, `Selector` et `Slider` implémentent aussi `EventObserver`.
-- `Selector` compose une étiquette et deux boutons de navigation. Seul le sélecteur est inscrit au gestionnaire d’événements de sa scène.
-- `VBO` réalise le contrat `Buffer`. `VAO` mémorise les attributs associés au tampon de sommets.
+- `SceneManager` possède de zéro à plusieurs scènes par `unique_ptr`; au plus une scène est active. Il charge la destination avant de décharger la scène courante. Si le chargement échoue, il décharge la destination partielle et conserve l’ancienne scène active.
+- Chaque `IScene` possède un `EventManager` par valeur. Ce gestionnaire observe de zéro à plusieurs composants via des `weak_ptr`; la scène garde la propriété de ses composants. `unload()` retire leurs inscriptions, y compris après un chargement partiel.
+- `ResourceManager` détient des `shared_ptr<Resource>` pour ses entrées titrées. Les scènes et contrôles gardent aussi des références partagées aux ressources qu’ils utilisent. Aucun composant de scène ne doit appeler `Texture::release()` ou `Font::release()`; il libère ses propres composants, et la dernière référence détruite libère la ressource.
+- `MainScene` possède une image, deux étiquettes et quatre boutons. `SettingsScene` possède une image, huit étiquettes et huit contrôles interactifs. `CreditsScene` possède six étiquettes et un bouton. `DemoGameScene` possède deux étiquettes, une barre de progression et un bouton. Les scènes libèrent leurs composants au déchargement.
+- Les sept contrôles réalisent `VisualComponent`. `Button`, `CheckBox`, `Selector` et `Slider` réalisent aussi `EventObserver`. `Selector` possède une étiquette et deux boutons de navigation par valeur; seul le sélecteur est observé par les événements de la scène.
+- Les programmes, VAO et VBO appartiennent aux contrôles par valeur. Le VAO capture la configuration du tampon lié, mais ne possède pas le VBO. `VBO` réalise le contrat `Buffer`.
+- `SettingsScene` recueille les choix de l’interface et appelle `Engine::commitSettings`. `Engine` applique l’affichage à `Window`; `Settings` valide et sauvegarde les valeurs.
 
 

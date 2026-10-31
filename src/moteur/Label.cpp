@@ -147,7 +147,12 @@ bool Label::render() {
     glBlendFuncSeparate(static_cast<GLenum>(oldBlendSrcRgb), static_cast<GLenum>(oldBlendDstRgb),
                         static_cast<GLenum>(oldBlendSrcAlpha), static_cast<GLenum>(oldBlendDstAlpha));
     if (!blendWasEnabled) glDisable(GL_BLEND);
-    return glGetError() == GL_NO_ERROR;
+    const GLenum renderError = glGetError();
+    if (renderError != GL_NO_ERROR) {
+        error_ = "Erreur OpenGL pendant le rendu du texte (code " + std::to_string(renderError) + ").";
+        return false;
+    }
+    return true;
 }
 
 void Label::release() {
