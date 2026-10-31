@@ -19,7 +19,7 @@ fichiers. Plusieurs noms peuvent désigner le même objet. Un retrait ne
 détruit pas un objet encore détenu par un contrôle. Une ressource non chargée
 peut aussi être stockée; son état se consulte avec `isLoaded()`.
 
-Conformément au nouveau diagramme d'Océane (`doc/Classes.svg`), chaque
+Conformément au diagramme de classes courant (`doc/Classes.md`), chaque
 ressource possède un titre consultable avec `getTitle()`. Il peut être fourni
 au constructeur : `Texture("fond_menu")` ou `Font(24.0f, "titre_menu")`.
 Pour conserver les appels existants, `add(name, resource)` attribue le premier

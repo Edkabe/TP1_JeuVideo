@@ -9,6 +9,16 @@ namespace moteur {
 /// @brief Paramètres de l'application, persistés dans un petit fichier binaire.
 class Settings {
 public:
+    struct Values {
+        std::string language;
+        int width = 960;
+        int height = 540;
+        bool fullscreen = false;
+        bool vsync = true;
+        float sensitivity = 1.0f;
+        float fov = 90.0f;
+        std::uint32_t programBinaryFormat = 0;
+    };
     /// @brief Charge le fichier à la construction; crée les valeurs par défaut s'il manque.
     explicit Settings(std::filesystem::path file = "settings.bin");
 
@@ -23,6 +33,8 @@ public:
     void setProgramBinaryFormat(std::uint32_t format) { programBinaryFormat = format; }
     const std::filesystem::path& getFilePath() const { return filePath; }
     const std::string& getError() const { return error; }
+    Values getValues() const;
+    bool setValues(const Values& values);
 
     // Les setters refusent une valeur invalide et laissent alors l'ancienne intacte.
     bool setLanguage(const std::string& value);

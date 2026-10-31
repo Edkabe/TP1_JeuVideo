@@ -253,67 +253,31 @@ void SettingsScene::update(float deltaTime) {
 
 void SettingsScene::applyChanges() {
     auto& settings = Engine::getInstance().getSettings();
-    const auto oldLanguage = settings.getLanguage();
-    const int oldWidth = settings.getWidth();
-    const int oldHeight = settings.getHeight();
-    const bool oldFullscreen = settings.isFullscreen();
-    const bool oldVsync = settings.isVSyncEnabled();
-    const float oldSensitivity = settings.getSensitivity();
-    const float oldFov = settings.getFov();
-
     const size_t languageIndex = language->getSelectedIndex();
     const size_t resolutionIndex = resolution->getSelectedIndex();
     const bool validSelection = languageIndex < languageCodes.size() && resolutionIndex < resolutions.size();
     const auto selectedResolution = validSelection ? resolutions[resolutionIndex] : std::pair<int, int>{0, 0};
-    if (!validSelection ||
-        !settings.setLanguage(languageCodes[languageIndex]) ||
-        !settings.setResolution(selectedResolution.first, selectedResolution.second) ||
-        !settings.setSensitivity(sensitivity->getValue()) ||
-        !settings.setFov(fov->getValue())) {
+    if (!validSelection) {
         error = "Une valeur de parametre selectionnee est invalide.";
         status->setText(localized(settings.getLanguage(),
                                   "Une valeur de paramètre est invalide.",
                                   "A selected setting is invalid."));
         return;
     }
-    settings.setFullscreen(fullscreen->isChecked());
-    settings.setVSync(vsync->isChecked());
+    auto next = settings.getValues();
+    next.language = languageCodes[languageIndex];
+    next.width = selectedResolution.first;
+    next.height = selectedResolution.second;
+    next.fullscreen = fullscreen->isChecked();
+    next.vsync = vsync->isChecked();
+    next.sensitivity = sensitivity->getValue();
+    next.fov = fov->getValue();
     auto& engine = Engine::getInstance();
-    // Appliquer d'abord les changements au moteur. Window restaure son etat precedent
-    // si SDL refuse une resolution, le plein ecran ou la VSync.
-    if (!engine.applySettings()) {
+    if (!engine.commitSettings(next)) {
         error = engine.getError();
-        settings.setLanguage(oldLanguage);
-        settings.setResolution(oldWidth, oldHeight);
-        settings.setFullscreen(oldFullscreen);
-        settings.setVSync(oldVsync);
-        settings.setSensitivity(oldSensitivity);
-        settings.setFov(oldFov);
-        // Window fait deja un retour arriere, mais cette seconde application
-        // retente explicitement les valeurs sauvegardees si SDL a signale un
-        // retour arriere incomplet.
-        const std::string applyError = error;
-        if (!engine.applySettings()) error += " | Restauration de l'affichage impossible : " + engine.getError();
-        else error = applyError;
         status->setText(std::string(localized(settings.getLanguage(),
-                                              "Application impossible : ",
-                                              "Could not apply settings: ")) + error);
-        return;
-    }
-    if (!settings.save()) {
-        error = settings.getError();
-        settings.setLanguage(oldLanguage);
-        settings.setResolution(oldWidth, oldHeight);
-        settings.setFullscreen(oldFullscreen);
-        settings.setVSync(oldVsync);
-        settings.setSensitivity(oldSensitivity);
-        settings.setFov(oldFov);
-        // Si l'ecriture echoue, restaurer aussi les reglages effectivement appliques.
-        const std::string saveError = error;
-        if (!engine.applySettings()) error += " | Restauration de l'affichage impossible : " + engine.getError();
-        status->setText(std::string(localized(settings.getLanguage(),
-                                              "Échec de l'enregistrement : ",
-                                              "Could not save settings: ")) + saveError);
+                                              "Application ou enregistrement impossible : ",
+                                              "Could not apply or save settings: ")) + error);
         return;
     }
     error.clear();

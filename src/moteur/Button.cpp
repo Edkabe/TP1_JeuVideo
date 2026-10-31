@@ -135,6 +135,11 @@ bool Button::render() {
     glDrawArrays(GL_TRIANGLES, 0, 6);
     centerTitle();
     if (!label.render()) { error = label.getError(); return false; }
+    const GLenum renderError = glGetError();
+    if (renderError != GL_NO_ERROR) {
+        error = "Erreur OpenGL pendant le rendu du bouton (code " + std::to_string(renderError) + ").";
+        return false;
+    }
     return true;
 }
 void Button::release() { label.release(); vao.release(); program.release(); }

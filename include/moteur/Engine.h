@@ -17,6 +17,9 @@ public:
     bool initialize(const std::string& title = "TP1", int width = 960, int height = 540, bool hidden = false);
     // Applique a la fenetre les parametres d'affichage actuellement charges ou modifies.
     bool applySettings();
+    // Valide, applique a la fenetre et persiste un nouveau jeu de parametres.
+    // En cas d'echec, restaure les valeurs et l'affichage precedents.
+    bool commitSettings(const Settings::Values& values);
     // Les callbacks seront remplacés/branchés sur le gestionnaire de scènes.
     bool run(const std::function<void(float)>& update,
              const std::function<void()>& render,

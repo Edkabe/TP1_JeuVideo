@@ -37,6 +37,11 @@ bool MainScene::load() {
     if (loaded) return true;
     error.clear();
     if (!SDL_GL_GetCurrentContext()) { error = "Contexte OpenGL actif necessaire."; return false; }
+    if (targets.start.empty() || targets.settings.empty() || targets.credits.empty() ||
+        !scenes.hasScene(targets.start) || !scenes.hasScene(targets.settings) || !scenes.hasScene(targets.credits)) {
+        error = "Une scene de destination du menu est absente.";
+        return false;
+    }
     const auto texture = acquireBackground();
     if (!texture) return false;
     const auto titleFont = acquireFont(36),bodyFont = acquireFont(22);

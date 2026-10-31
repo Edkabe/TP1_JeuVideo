@@ -3,14 +3,38 @@
 #include "moteur/CreditsScene.h"
 #include "moteur/DemoGameScene.h"
 #include "moteur/SettingsScene.h"
+#include "moteur/Label.h"
+#include <glad/gl.h>
 #include <SDL3/SDL.h>
 #include <filesystem>
+#include <chrono>
 #include <iostream>
 #include <memory>
 #include <stdexcept>
 
 namespace {
 int checks = 0;
+
+class FailingRenderScene final : public moteur::IScene {
+public:
+    explicit FailingRenderScene(std::shared_ptr<moteur::Font> font) : font(std::move(font)) {}
+    bool load() override {
+        label = std::make_unique<moteur::Label>(font, "Test de rendu en erreur");
+        if (!label->render()) { error = label->getError(); return false; }
+        return true;
+    }
+    void unload() override { if (label) label->release(); label.reset(); }
+    void update(float) override {}
+    void render() override {
+        glEnable(static_cast<GLenum>(0xffffffffu)); // GL_INVALID_ENUM volontaire pour vérifier le retour du contrôle.
+        if (!label->render()) error = label->getError();
+    }
+    const std::string& getError() const override { return error; }
+private:
+    std::shared_ptr<moteur::Font> font;
+    std::unique_ptr<moteur::Label> label;
+    std::string error;
+};
 
 class FailingUpdateScene final : public moteur::IScene {
 public:
@@ -61,6 +85,18 @@ void openFromMenu(moteur::MainScene& menu, moteur::MainScene::Action action,
 }
 
 int main() {
+    const auto testDirectory = std::filesystem::temp_directory_path() /
+        ("tp1-scene-integration-tests-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
+    std::error_code directoryError;
+    std::filesystem::create_directories(testDirectory, directoryError);
+    if (directoryError) {
+        std::cerr << "Impossible de preparer le dossier temporaire: " << directoryError.message() << '\n';
+        return 1;
+    }
+    // Garder ce dossier comme répertoire courant jusqu'à la fin du processus:
+    // le destructeur du singleton Engine sauvegarde encore ses Settings.
+    std::filesystem::current_path(testDirectory);
+
     try {
         auto& engine = moteur::Engine::getInstance();
         auto& preferences = engine.getSettings();
@@ -96,8 +132,8 @@ int main() {
         check(scenes.addScene("credits", std::move(credits)), "Ajout des credits");
         check(scenes.addScene("parametres", std::move(settings)), "Ajout des parametres");
         check(scenes.setActiveScene("menu") && menuView->isLoaded(), "Chargement initial du menu");
-        const auto mainFont = menuView->getSharedFont();
-        const auto mainBackground = menuView->getSharedBackground();
+        auto mainFont = menuView->getSharedFont();
+        auto mainBackground = menuView->getSharedBackground();
 
         openFromMenu(*menuView, moteur::MainScene::Action::Settings, "parametres", scenes);
         check(settingsView->isLoaded(), "Chargement des controles de parametres");
@@ -163,6 +199,19 @@ int main() {
         check(!engine.run(failingScenes) && engine.getError() == "Erreur de mise a jour propagee.",
               "Engine::run transmet au code appelant l'erreur d'une scene");
         failingScenes.clear();
+
+        moteur::SceneManager failingRenderScenes;
+        check(failingRenderScenes.addScene("rendu-erreur", std::make_unique<FailingRenderScene>(mainFont)) &&
+              failingRenderScenes.setActiveScene("rendu-erreur"),
+              "Preparation d'une scene dont un controle echoue au rendu");
+        check(!engine.run(failingRenderScenes) &&
+              engine.getError().find("Erreur OpenGL pendant le rendu du texte") != std::string::npos,
+              "L'erreur OpenGL d'un controle remonte a l'application avec un resultat d'echec");
+        failingRenderScenes.clear();
+        check(engine.run([](float) {}, [&engine] { engine.stop(); }) && engine.getError().empty(),
+              "Une fermeture normale de la boucle retourne un succes distinct d'une erreur de rendu");
+        mainFont.reset();
+        mainBackground.reset();
         check(engine.shutdown(), "Fermeture propre apres dechargement de toutes les scenes");
         std::cout << checks << " verifications d'integration reussies.\n";
         return 0;

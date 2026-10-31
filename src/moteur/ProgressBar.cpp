@@ -93,6 +93,11 @@ bool ProgressBar::render() {
     if (!blend) glDisable(GL_BLEND);
     if (depth) glEnable(GL_DEPTH_TEST);
     if (cull) glEnable(GL_CULL_FACE);
+    const GLenum renderError = glGetError();
+    if (renderError != GL_NO_ERROR) {
+        error = "Erreur OpenGL pendant le rendu de la barre (code " + std::to_string(renderError) + ").";
+        return false;
+    }
     return true;
 }
 void ProgressBar::release() { vao.release(); program.release(); }

@@ -138,8 +138,13 @@ bool Selector::render() {
     glBlendEquationSeparate(rgb, alpha);
     if (depth) glEnable(GL_DEPTH_TEST);
     if (cull) glEnable(GL_CULL_FACE);
-    if (!success) error = label.getError();
-    return success;
+    if (!success) { error = label.getError(); return false; }
+    const GLenum renderError = glGetError();
+    if (renderError != GL_NO_ERROR) {
+        error = "Erreur OpenGL pendant le rendu du selecteur (code " + std::to_string(renderError) + ").";
+        return false;
+    }
+    return true;
 }
 void Selector::release() { label.release(); previousButton.release(); nextButton.release(); }
 }
